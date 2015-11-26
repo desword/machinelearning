@@ -105,7 +105,7 @@ if __name__ == '__main__':
 
 
     # print len(split_data), len(split_rssi), len(pilot_data_alltrace), len(pilot_ser_alltrace), len(other_data_alltrace), len(unkonwSymbolp)
-    limit_length = 100
+    limit_length = 10
     print 'start est_ser'
     est_ser = estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, limit_length)
     # print 'start gt_ser'
