@@ -7,7 +7,7 @@ import Gnuplot_related as gr
 def groudtruth(unkonwSymbolp, limit_length):
 	gt_ser_all = []
 	for i in range(limit_length):
-		gt_ser_packet = []  
+		gt_ser_packet = []
 		for j in range(len(unkonwSymbolp[i])):
 			if unkonwSymbolp[i][j] != '0':
 				gt_ser_packet.append(0.1)
@@ -21,7 +21,7 @@ def estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, l
 	theta = [1 for i in range(len(pilot_data_alltrace[0][0])+ 1)]
 	est_ser_all = []
 	# for i in range(len(pilot_data_alltrace)):
-	for i in range(limit_length):
+	for i in range(limit_length[0], limit_length[1]):
 		# theta = [1 for j in range(len(pilot_data_alltrace[0][0])+ 1)]
 
 		theta = ot.onlineLearningMain(pilot_data_alltrace[i], pilot_ser_alltrace[i], theta)
@@ -56,7 +56,7 @@ def relatederror(est_ser, gt_ser):
 	pass
 
 
-def Calc_metric(est_ser, unkonwSymbolp):
+def Calc_metric(est_ser, unkonwSymbolp,limit_length):
     accur_alltrace = []
     detailAccur_alltrace = []
 
@@ -67,12 +67,12 @@ def Calc_metric(est_ser, unkonwSymbolp):
         for j in range(len(est_ser[i])):
             # print unkonwSymbolp[i][j], est_ser[i][j]
             if est_ser[i][j] > 0.5:
-                if unkonwSymbolp[i][j] != '0':
+                if unkonwSymbolp[i+limit_length[0]][j] != '0':
                     tn += 1
                 else:
                     fn += 1
             else:
-                if unkonwSymbolp[i][j] == '0':
+                if unkonwSymbolp[i+ limit_length[0]][j] == '0':
                     tp += 1
                 else:
                     fp += 1
@@ -95,6 +95,15 @@ def Calc_metric(est_ser, unkonwSymbolp):
         accur_alltrace.append(accru_packet)
     return [accur_alltrace, detailAccur_alltrace]
 
+def print_detail_result(est_ser, UnkonwSymbolPayload,other_data_alltrace, limit_length):
+    result = []
+    for i in range(len(est_ser)):
+        for j in range(len(est_ser[i])):
+            result.append("[%d-%d][est]:%s, [payload]:%s, [RSSI]:%s \n" % (i,j, str(est_ser[i][j]) , str(unkonwSymbolp[i+limit_length[0]][j]), str(other_data_alltrace[i+limit_length[0]][j][0])))
+    f =open('result_%d_%d.txt' % (limit_length[0],limit_length[1]),'w')
+    f.writelines(result)
+    f.close()
+    pass
 
 
 if __name__ == '__main__':
@@ -105,8 +114,8 @@ if __name__ == '__main__':
 
 
     # print len(split_data), len(split_rssi), len(pilot_data_alltrace), len(pilot_ser_alltrace), len(other_data_alltrace), len(unkonwSymbolp)
-    limit_length = 10
-    print 'start est_ser'
+    limit_length = [11,20]
+    print '[+]start est_ser'
     est_ser = estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, limit_length)
     # print 'start gt_ser'
     # gt_ser = groudtruth(unkonwSymbolp, limit_length)
@@ -116,10 +125,17 @@ if __name__ == '__main__':
     # for i in range(len(rt_err)):
     # 	print "%d:" % (i), rt_err[i][len(rt_err[i])-1]
 
+
+
+    print '[!]write no diff rssi data trace'
     other_nodiff_data_trace = pds.simulated_unkonw_symbol(False)
     gr.print_gnuplot(est_ser, unkonwSymbolp,other_nodiff_data_trace)
-    print "calc metreic"
-    [accur_alltrace, detailAccur_alltrace] = Calc_metric(est_ser, unkonwSymbolp)
+
+    print '[!]write detailed result'
+    print_detail_result(est_ser, unkonwSymbolp, other_nodiff_data_trace, limit_length)
+
+    print "[!]calc metreic"
+    [accur_alltrace, detailAccur_alltrace] = Calc_metric(est_ser, unkonwSymbolp,limit_length)
     for i in range(len(accur_alltrace)):
         print "%d:[preci]%s, [recall]:%s" % (i, str(accur_alltrace[i][0]), accur_alltrace[i][1]),
         print "[fp]:%s, [fn]:%s, [tp]:%s, [tn]:%s" % (str(detailAccur_alltrace[i][0]),str(detailAccur_alltrace[i][1]),str(detailAccur_alltrace[i][2]),str(detailAccur_alltrace[i][3]) )
