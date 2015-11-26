@@ -89,13 +89,15 @@ def choosePilot(data,rssi, pilot_step):
 
 def chooseOthersymbol(data,rssi, pilot_step):
     other_data_alltrace = []
+
     for i in range(len(rssi)):
         other_data_paket = []
-        other_data_element = []
         for j in range(len(rssi[i])):
+            other_data_element = []
             if j % pilot_step == 0:
                 continue
             other_data_element.append(rssi[i][j])
+            # print '[pick%d-%d][rssi]:%s\n' % (i,j,rssi[i][j]),
             other_data_paket.append(other_data_element)
         other_data_alltrace.append(other_data_paket)
     # print 'other symol',len(other_data_alltrace[1])
@@ -133,8 +135,8 @@ def simulated_tracebase(isDiffRssi):
     return [s_dataTrace, s_rssiTrace, pilot_step]
     pass
 
-def UnkonwSymbolPayload():
-    [data, rssi, pilot_step] = simulated_tracebase(True)
+def UnkonwSymbolPayload(isDiffRssi):
+    [data, rssi, pilot_step] = simulated_tracebase(isDiffRssi)
     unkonwSymbolp = []
     for i in range(len(data)):
         unkonwSymbolp_paket = []
@@ -150,13 +152,18 @@ def UnkonwSymbolPayload():
 
 def simulated_unkonw_symbol(isDiffRssi):
     [split_data, split_rssi, pilot_step] = simulated_tracebase(isDiffRssi)
+
+    # print split_rssi[0]
     other_data_alltrace = chooseOthersymbol(split_data,split_rssi, pilot_step)
+    # for i in range(len(other_data_alltrace[0])):
+    #     print "[%d][rssi]:%s\n" % (i, other_data_alltrace[0][i][0])
+
     return other_data_alltrace
     pass
 
 
-def simulated_pilot_generate():
-    [split_data, split_rssi, pilot_step] = simulated_tracebase(True)
+def simulated_pilot_generate(isDiffRssi):
+    [split_data, split_rssi, pilot_step] = simulated_tracebase(isDiffRssi)
     [pilot_data_alltrace, pilot_ser_alltrace] = choosePilot(split_data, split_rssi, pilot_step)
     return [pilot_data_alltrace, pilot_ser_alltrace]
     pass

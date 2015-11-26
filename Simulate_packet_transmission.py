@@ -2,6 +2,7 @@ import Pilot_data_simulate as pds
 import SSER_online_train as ot
 import math
 import Gnuplot_related as gr
+import rawDataExactor as rde
 
 # groundtruth that true is 0% determine the, false is 100%
 def groudtruth(unkonwSymbolp, limit_length):
@@ -105,16 +106,39 @@ def print_detail_result(est_ser, UnkonwSymbolPayload,other_data_alltrace, limit_
     f.close()
     pass
 
+def print_split_trace(limit_length, pilot_step):
+    trace = []
+    [split_data, split_rssi, pilot_step] = pds.simulated_tracebase(False)
+    [raw_data, raw_rssi] = rde.readTrace(  "rx-0-22-11-20140629-15-47-41-with_interference_802.11g")
+    for i in range(limit_length[0], limit_length[1]):
+        for j in range(len(split_rssi[i])):
+            rawrssi = 0
+            if j >= len(raw_rssi[i]):
+                rawrssi = -1
+            else:
+                rawrssi = raw_rssi[i][j]
+            if j% pilot_step != 0:
+                trace.append("[%d-%d][raw_rssi]:%s, [spredRSSI]:%s\n" % (i,j,rawrssi, split_rssi[i][j]))
+            else:
+                trace.append("[pilot][%d-%d][raw_rssi]:%s, [spredRSSI]:%s\n" % (i,j,rawrssi, split_rssi[i][j]))
+
+
+    f = open("rssi_compare_%d_%d.txt" % (limit_length[0], limit_length[1]),'w')
+    f.writelines(trace)
+    f.close()
+    pass
+
 
 if __name__ == '__main__':
+    limit_length = [0,10]
+
     [split_data, split_rssi, pilot_step] = pds.simulated_tracebase(True)
-    [pilot_data_alltrace, pilot_ser_alltrace] = pds.simulated_pilot_generate()
+    [pilot_data_alltrace, pilot_ser_alltrace] = pds.simulated_pilot_generate(True)
     other_data_alltrace = pds.simulated_unkonw_symbol(True)
-    unkonwSymbolp = pds.UnkonwSymbolPayload()
+    unkonwSymbolp = pds.UnkonwSymbolPayload(True)
 
 
     # print len(split_data), len(split_rssi), len(pilot_data_alltrace), len(pilot_ser_alltrace), len(other_data_alltrace), len(unkonwSymbolp)
-    limit_length = [11,20]
     print '[+]start est_ser'
     est_ser = estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, limit_length)
     # print 'start gt_ser'
@@ -127,12 +151,15 @@ if __name__ == '__main__':
 
 
 
-    print '[!]write no diff rssi data trace'
+    print '[debug]write no diff rssi data trace'
     other_nodiff_data_trace = pds.simulated_unkonw_symbol(False)
-    gr.print_gnuplot(est_ser, unkonwSymbolp,other_nodiff_data_trace)
+    gr.print_gnuplot(est_ser, unkonwSymbolp,other_nodiff_data_trace,limit_length)
 
-    print '[!]write detailed result'
+    print '[debug]write detailed result'
     print_detail_result(est_ser, unkonwSymbolp, other_nodiff_data_trace, limit_length)
+
+    print '[debug]print rssi info'
+    print_split_trace(limit_length, pilot_step)
 
     print "[!]calc metreic"
     [accur_alltrace, detailAccur_alltrace] = Calc_metric(est_ser, unkonwSymbolp,limit_length)

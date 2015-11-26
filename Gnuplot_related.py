@@ -25,25 +25,25 @@ def allrssitrace():
 
 
 # [position],[tn],[fn],[tp],[fp]
-def print_gnuplot(est_ser, unkonwSymbolp,other_data_alltrace):
+def print_gnuplot(est_ser, unkonwSymbolp,other_data_alltrace, limit_length):
     intofile = []
     wholecounter = 1
     for i in range(len(est_ser)):
         for j in range(len(est_ser[i])):
             eachline = [str(wholecounter) + ' ']
             if est_ser[i][j] > 0.5 :
-                if unkonwSymbolp[i][j] != '0':
-                    eachline.append(str(other_data_alltrace[i][j][0]) + ' 0 0 0')
+                if unkonwSymbolp[i+limit_length[0]][j] != '0':
+                    eachline.append(str(other_data_alltrace[i+limit_length[0]][j][0]) + ' 0 0 0')
                 else:
-                    eachline.append('0 ' + str(other_data_alltrace[i][j][0]) + ' 0 0')
+                    eachline.append('0 ' + str(other_data_alltrace[i+limit_length[0]][j][0]) + ' 0 0')
             else:
-                if unkonwSymbolp[i][j] == '0':
-                    eachline.append('0 0 ' + str(other_data_alltrace[i][j][0]) + ' 0')
+                if unkonwSymbolp[i+limit_length[0]][j] == '0':
+                    eachline.append('0 0 ' + str(other_data_alltrace[i+limit_length[0]][j][0]) + ' 0')
                 else:
-                    eachline.append('0 0 0 ' + str(other_data_alltrace[i][j][0]))
+                    eachline.append('0 0 0 ' + str(other_data_alltrace[i+limit_length[0]][j][0]))
             intofile.append(''.join(eachline) + '\n')
             wholecounter += 1
-    f = open('TFdiag_data_11_20.txt','w')
+    f = open('TFdiag_data_%d_%d.txt' % (limit_length[0], limit_length[1]),'w')
     f.writelines(intofile)
     f.close()
     pass
