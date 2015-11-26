@@ -7,7 +7,7 @@ import Gnuplot_related as gr
 def groudtruth(unkonwSymbolp, limit_length):
 	gt_ser_all = []
 	for i in range(limit_length):
-		gt_ser_packet = []
+		gt_ser_packet = []  
 		for j in range(len(unkonwSymbolp[i])):
 			if unkonwSymbolp[i][j] != '0':
 				gt_ser_packet.append(0.1)
