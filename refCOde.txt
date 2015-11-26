@@ -1,0 +1,53 @@
+int main(void)  
+{  
+        float matrix[4][2]={{1,4},{2,5},{5,1},{4,2}};  
+        float result[4]={19,26,19,20};  
+        float theta[2]={2,5};  
+        float loss = 10.0;  
+        for(int i =0 ;i<100&&loss>0.001;++i)  
+        {  
+                float error_sum=0.0;  
+                //sample data index selected.
+                int j=i%4;  
+                {  
+                        float h = 0.0;  
+                        for(int k=0;k<2;++k)  
+                        {  
+                                h += matrix[j][k]*theta[k];  
+  
+                        }  
+                        error_sum = result[j]-h;  
+                        for(int k=0;k<2;++k)  
+                        {  
+                                theta[k] = theta[k]+0.01*(error_sum)*matrix[j][k];  
+                        }  
+                }  
+                printf("%f,%f\n",theta[0],theta[1]);  
+                float loss = 0.0;  
+                for(int j = 0;j<4;++j)  
+                {  
+                        float sum=0.0;  
+                        for(int k = 0;k<2;++k)  
+                        {  
+  
+                                sum += matrix[j][k]*theta[k];  
+                        }  
+                        loss += (sum-result[j])*(sum-result[j]);  
+                }  
+                printf("%f\n",loss);  
+        }  
+        return 0;  
+}  
+
+
+求X的N日指数平滑移动平均，在股票公式中一般表达为：EMA（X，N），其中X为当日收盘价，N为天数。它真正的公式表达是：当日指数平均值=平滑系数*（当日指数值-昨日指数平均值）+昨日指数平均值；平滑系数=2/（周期单位+1）；由以上公式推导开，得到：
+EMA(X,N)=2*X/(N+1)+(N-1)/(N+1)*昨天的指数收盘平均值；[2]
+
+
+
+
+
+
+
+
+
