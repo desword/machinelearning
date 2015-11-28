@@ -19,7 +19,7 @@ def groudtruth(unkonwSymbolp, limit_length):
 	pass
 
 def estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, limit_length):
-	theta = [1 for i in range(len(pilot_data_alltrace[0][0])+ 1)]
+	theta = [2 for i in range(len(pilot_data_alltrace[0][0])+ 1)]
 	est_ser_all = []
 	# for i in range(len(pilot_data_alltrace)):
 	for i in range(limit_length[0], limit_length[1]):
@@ -83,11 +83,11 @@ def Calc_metric(est_ser, unkonwSymbolp,limit_length):
         detailAccur_packet.append(tn)
         detailAccur_alltrace.append(detailAccur_packet)
 
-        if tn+fn != 0:
-            precision = tn*1.0 / (tn+fn)# accuracy
+        if tp+fp+tn+fn != 0:
+            precision = (tn+tp)*1.0 / (tp+fp+tn+fn)# accuracy
         else:
             precision = 0
-        if tp+fn != 0:
+        if tn+fp != 0:
             recall = tn*1.0 / (tn+fp)    # whole
         else:
             recall = 0
@@ -118,9 +118,9 @@ def print_split_trace(limit_length, pilot_step):
             else:
                 rawrssi = raw_rssi[i][j]
             if j% pilot_step != 0:
-                trace.append("[%d-%d][raw_rssi]:%s, [spredRSSI]:%s\n" % (i,j,rawrssi, split_rssi[i][j]))
+                trace.append("[%d-%d][raw_rssi]:%s, [spredRSSI]:%s, [raw_data]:%s\n" % (i,j,rawrssi, split_rssi[i][j],split_data[i][j]))
             else:
-                trace.append("[pilot][%d-%d][raw_rssi]:%s, [spredRSSI]:%s\n" % (i,j,rawrssi, split_rssi[i][j]))
+                trace.append("[pilot][%d-%d][raw_rssi]:%s, [spredRSSI]:%s, [raw_data]:%s\n" % (i,j,rawrssi, split_rssi[i][j], split_data[i][j]))
 
 
     f = open("rssi_compare_%d_%d.txt" % (limit_length[0], limit_length[1]),'w')

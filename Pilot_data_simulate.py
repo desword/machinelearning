@@ -76,9 +76,9 @@ def choosePilot(data,rssi, pilot_step):
         for plindex in range(0, len(rssi[pkgindex]), pilot_step):
             pilot_data_element = []
             if data[pkgindex][plindex] != '0':# if current symbol is wrong , 
-                pilot_ser_packet.append(random.uniform(0.9,1)) # assume the pilot error has high confidence
+                pilot_ser_packet.append(random.uniform(0.99,1)) # assume the pilot error has high confidence
             else:
-                pilot_ser_packet.append(random.uniform(0,0.1)) # assume the pilot error has low confidence
+                pilot_ser_packet.append(random.uniform(0,0.01)) # assume the pilot error has low confidence
             pilot_data_element.append(rssi[pkgindex][plindex])
             pilot_data_packet.append(pilot_data_element)
         Pilot_data_alltrace.append(pilot_data_packet)
@@ -117,6 +117,17 @@ def calcdif_rssi( rssiTrace):
     return difrssi_alltrace
     pass
 
+# filter the protocal header and tailder data. using only the pakcet content data
+def protocal_802_15_4_modify(s_dataTrace, s_rssiTrace, len_symbol):
+    filter_head = 8/len_symbol * 12 # the number of filtered fraction after scaled
+    filter_tail = 8/len_symbol * 2
+    for i in range(len(s_dataTrace)):
+        s_dataTrace[i] = s_dataTrace[i][:len(s_dataTrace[i]) - filter_tail]
+        s_dataTrace[i] = s_dataTrace[i][filter_head:]
+        s_rssiTrace[i] = s_rssiTrace[i][:len(s_rssiTrace[i]) - filter_tail]
+        s_rssiTrace[i] = s_rssiTrace[i][filter_head:]
+    return [s_dataTrace, s_rssiTrace]
+    pass
 
 def simulated_tracebase(isDiffRssi):
     len_symbol = 8
@@ -129,6 +140,8 @@ def simulated_tracebase(isDiffRssi):
     # dataTrace = rde.simpleSplit(dataTrace)# split the data trace into symbol, 4 bit/symbol in this case
     [s_dataTrace, s_rssiTrace] = rde.scaledRSSI(dataTrace, rssiTrace, thres_dtlength)# linear insert value
 
+    #filter head and tail
+    [s_dataTrace, s_rssiTrace] = protocal_802_15_4_modify(s_dataTrace, s_rssiTrace,len_symbol)
     # comment here to print the gnuplot data
     if isDiffRssi:
         s_rssiTrace = calcdif_rssi(s_rssiTrace)

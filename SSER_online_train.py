@@ -53,7 +53,7 @@ def adaplearnrate(learn_rate, pre_err_EMA, error_sum, pre_error_sum ,i,pilot_dat
 def online_train(pilot_data, pilot_ser, theta):
 	
     loss = 10.0
-    learn_rate = [0.01 for i in range(len(theta))]
+    learn_rate = [0.001 for i in range(len(theta))]
     pre_err_EMA = 0
     pre_error_sum = 0
 
@@ -84,6 +84,6 @@ def online_train(pilot_data, pilot_ser, theta):
         loss = calc_loss(pilot_data, pilot_ser, theta)
 
 		# print "loss:%s\n" % (str(loss))
-    # print "finalLoss:%s, theta[0]:%s, theta[1]:%s\n" % (str(loss), str(theta[0]) ,str(theta[1]))
+    print "finalLoss:%s, theta[0]:%s, theta[1]:%s\n" % (str(loss), str(theta[0]) ,str(theta[1]))
     return theta
     pass
