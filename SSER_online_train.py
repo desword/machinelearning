@@ -29,13 +29,14 @@ def normalize_pilotdata(pilot_data):
 
 # p(y=0|x) = exp(-f(x))/ [ 1+ exp(-f(x)) ]
 def destfunc(theta, pilot_data_i, pilot_ser_i):
-	dis_fun = 0.0
-	up_fun = theta[0]
-	for j in range(1, len(theta)):
-		up_fun += (theta[j] * pilot_data_i[j-1] )
-	dis_fun = 1 / (1 + math.e**(up_fun))
-	return pilot_ser_i - dis_fun
-	pass
+    dis_fun = 0.0
+    up_fun = theta[0]
+    for j in range(1, len(theta)):
+        up_fun += (theta[j] * pilot_data_i[j-1] )
+    # dis_fun = 1 / (1 + math.e**(up_fun))
+    dis_fun = math.e**(up_fun) / (1 + math.e**(up_fun))
+    return pilot_ser_i - dis_fun
+    pass
 
 def adaplearnrate(learn_rate, pre_err_EMA, error_sum, pre_error_sum ,i,pilot_data_i, pre_pilot_data_i):
     #exponential moving average
