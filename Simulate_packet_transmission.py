@@ -40,22 +40,6 @@ def estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, l
     return est_ser_all
     pass
 
-def relatederror(est_ser, gt_ser):
-    rt_error_all = []
-    for i in range(len(est_ser)):
-        rt_error_packet = []
-        sumerror = 0
-        # print len(est_ser[i])
-        for j in range(len(est_ser[i])):
-            # print j
-            # rt = (est_ser[i][j] - gt_ser[i][j]) / (gt_ser[i][j])
-            rt = abs(est_ser[i][j] - gt_ser[i][j])
-            sumerror += rt
-            rt_error_packet.append(rt)
-        rt_error_packet.append(sumerror/len(est_ser[i]))# the last element is the average related error
-        rt_error_all.append(rt_error_packet)
-    return rt_error_all
-    pass
 
 
 def Calc_metric(est_ser, unkonwSymbolp,limit_length):
@@ -130,6 +114,9 @@ def print_split_trace(limit_length, pilot_step):
     pass
 
 
+def RSSIdata_dbm():
+    pass
+
 if __name__ == '__main__':
     limit_length = [0,20]
 
@@ -162,10 +149,29 @@ if __name__ == '__main__':
     print '[debug]print rssi info'
     print_split_trace(limit_length, pilot_step)
 
-    print "[!]calc metreic"
+    print "[!]calc metric"
     [accur_alltrace, detailAccur_alltrace] = Calc_metric(est_ser, unkonwSymbolp,limit_length)
     for i in range(len(accur_alltrace)):
         print "%d:[preci]%s, [recall]:%s" % (i, str(accur_alltrace[i][0]), accur_alltrace[i][1]),
         print "[fp]:%s, [fn]:%s, [tp]:%s, [tn]:%s" % (str(detailAccur_alltrace[i][0]),str(detailAccur_alltrace[i][1]),str(detailAccur_alltrace[i][2]),str(detailAccur_alltrace[i][3]) )
 
 pass
+
+
+
+def relatederror(est_ser, gt_ser):
+    rt_error_all = []
+    for i in range(len(est_ser)):
+        rt_error_packet = []
+        sumerror = 0
+        # print len(est_ser[i])
+        for j in range(len(est_ser[i])):
+            # print j
+            # rt = (est_ser[i][j] - gt_ser[i][j]) / (gt_ser[i][j])
+            rt = abs(est_ser[i][j] - gt_ser[i][j])
+            sumerror += rt
+            rt_error_packet.append(rt)
+        rt_error_packet.append(sumerror/len(est_ser[i]))# the last element is the average related error
+        rt_error_all.append(rt_error_packet)
+    return rt_error_all
+    pass
