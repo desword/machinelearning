@@ -1,6 +1,7 @@
 import rawDataExactor as rde
 import random
 import SSER_online_train as ot
+import metric_data_simulate as mds
 
 
 
@@ -16,9 +17,9 @@ def one_one_RSSI_metrics(rssi_packet, index_data):
 
 # using multiple rssi value surrounded with data as input to training the model
 # the rssi value still is the difference between the majority.
-def multi_one_RSSI_metrics(rssi_packet, index_data):
-    max_left_rssinum = 2
-    max_right_rssinum = 2
+def multi_one_RSSI_metrics(rssi_packet, index_data, neighbor_level):
+    max_left_rssinum = neighbor_level
+    max_right_rssinum = neighbor_level
     index_beg = index_data - max_left_rssinum
     if index_beg < 0:
         index_beg = 0
@@ -33,14 +34,14 @@ def multi_one_RSSI_metrics(rssi_packet, index_data):
 def generateTrainMetrics(rssi_packet, index_data):
     # return one_one_RSSI_metrics(rssi_packet, index_data)
 
-    return multi_one_RSSI_metrics(rssi_packet, index_data)
+    return multi_one_RSSI_metrics(rssi_packet, index_data, 2)
     pass
 
 
 # Pilot_data_alltrace : [ [for each packet],[ [chosed pilot data],[RSSI,snr]   ]  ]
 # pilot_data_packet: [ [chosed pilot data],[RSSI,snr]   ]
 # pilot_ser_alltrace : [ [for each packet],[ [chosed pilot ser],[ser] ] ]
-def choosePilot(data,rssi, pilot_step):
+def choosePilot(data,rssi, pilot_step, metrics_command, argvList):
     Pilot_data_alltrace = []
     pilot_ser_alltrace = []
     random.seed(3)
@@ -52,7 +53,7 @@ def choosePilot(data,rssi, pilot_step):
                 pilot_ser_packet.append(random.uniform(0.99,1)) # assume the pilot error has high confidence
             else:
                 pilot_ser_packet.append(random.uniform(0,0.01)) # assume the pilot error has low confidence
-            pilot_data_element = generateTrainMetrics(rssi[pkgindex], plindex)
+            pilot_data_element = mds.metric_management(metrics_command, argvList, rssi[pkgindex], plindex)
             pilot_data_packet.append(pilot_data_element)
         Pilot_data_alltrace.append(pilot_data_packet)
         pilot_ser_alltrace.append(pilot_ser_packet)
@@ -60,14 +61,14 @@ def choosePilot(data,rssi, pilot_step):
     return [Pilot_data_alltrace, pilot_ser_alltrace]
     pass
 
-def chooseOthersymbol(data,rssi, pilot_step):
+def chooseOthersymbol(data,rssi, pilot_step, metrics_command, argvList):
     other_data_alltrace = []
     for i in range(len(data)):
         other_data_paket = []
         for j in range(len(data[i])):
             if j % pilot_step == 0:
                 continue
-            other_data_element = generateTrainMetrics(rssi[i],j)
+            other_data_element = mds.metric_management(metrics_command, argvList, rssi[i],j)
             # print '[pick%d-%d][rssi]:%s\n' % (i,j,rssi[i][j]),
             other_data_paket.append(other_data_element)
         other_data_alltrace.append(other_data_paket)
@@ -75,18 +76,6 @@ def chooseOthersymbol(data,rssi, pilot_step):
     return other_data_alltrace
     pass
 
-# get the difference between baseRSSi and rssi
-def calcdif_rssi( rssiTrace):
-    difrssi_alltrace = []
-    for i in range(len(rssiTrace)):
-        baseRSSI = int(max(rssiTrace[i],key=rssiTrace[i].count))
-        difrssi_packet = []
-        for j in range(len(rssiTrace[i])):
-            newrssi = int(rssiTrace[i][j])- baseRSSI
-            difrssi_packet.append(newrssi)
-        difrssi_alltrace.append(difrssi_packet)
-    return difrssi_alltrace
-    pass
 
 # filter the protocol header and tailer data. using only the pakcet content data
 def protocal_802_15_4_modify(s_dataTrace, s_rssiTrace, len_symbol):
@@ -100,7 +89,10 @@ def protocal_802_15_4_modify(s_dataTrace, s_rssiTrace, len_symbol):
     return [s_dataTrace, s_rssiTrace]
     pass
 
-def simulated_tracebase(isDiffRssi):
+
+# command= define the metrics that is RSSI or SINR,
+# argvList = define the arguments that our metrics need.
+def simulated_tracebase( metrics_command, argvList):
     len_symbol = 8
     pilot_step = 8  # every pilot_step to get samples, actually is pilot_step*len_symbol.
     packet_len = 110
@@ -113,14 +105,12 @@ def simulated_tracebase(isDiffRssi):
 
     #filter head and tail
     [s_dataTrace, s_rssiTrace] = protocal_802_15_4_modify(s_dataTrace, s_rssiTrace,len_symbol)
-    # comment here to print the gnuplot data
-    if isDiffRssi:
-        s_rssiTrace = calcdif_rssi(s_rssiTrace)
+
     return [s_dataTrace, s_rssiTrace, pilot_step]
     pass
 
-def UnkonwSymbolPayload(isDiffRssi):
-    [data, rssi, pilot_step] = simulated_tracebase(isDiffRssi)
+def UnkonwSymbolPayload(data, pilot_step):
+    # [data, rssi, pilot_step] = simulated_tracebase()
     unkonwSymbolp = []
     for i in range(len(data)):
         unkonwSymbolp_paket = []
@@ -132,23 +122,21 @@ def UnkonwSymbolPayload(isDiffRssi):
         unkonwSymbolp.append(unkonwSymbolp_paket)
     # print 'palylaod',len(unkonwSymbolp[1])
     return unkonwSymbolp
-    pass
 
-def simulated_unkonw_symbol(isDiffRssi):
-    [split_data, split_rssi, pilot_step] = simulated_tracebase(isDiffRssi)
+def simulated_unkonw_symbol(split_data, split_rssi, pilot_step, metrics_command,argvList):
+    # [split_data, split_rssi, pilot_step] = simulated_tracebase(isDiffRssi)
 
     # print split_rssi[0]
-    other_data_alltrace = chooseOthersymbol(split_data,split_rssi, pilot_step)
+    other_data_alltrace = chooseOthersymbol(split_data,split_rssi, pilot_step, metrics_command,argvList)
     # for i in range(len(other_data_alltrace[0])):
     #     print "[%d][rssi]:%s\n" % (i, other_data_alltrace[0][i][0])
-
     return other_data_alltrace
     pass
 
 
-def simulated_pilot_generate(isDiffRssi):
-    [split_data, split_rssi, pilot_step] = simulated_tracebase(isDiffRssi)
-    [pilot_data_alltrace, pilot_ser_alltrace] = choosePilot(split_data, split_rssi, pilot_step)
+def simulated_pilot_generate(split_data, split_rssi, pilot_step, metrics_command,argvList ):
+    # [split_data, split_rssi, pilot_step] = simulated_tracebase(isDiffRssi)
+    [pilot_data_alltrace, pilot_ser_alltrace] = choosePilot(split_data, split_rssi, pilot_step, metrics_command,argvList)
     return [pilot_data_alltrace, pilot_ser_alltrace]
     pass
 

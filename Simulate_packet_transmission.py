@@ -118,12 +118,14 @@ def RSSIdata_dbm():
     pass
 
 if __name__ == '__main__':
-    limit_length = [0,20]
+    limit_length = [1,2]
 
-    [split_data, split_rssi, pilot_step] = pds.simulated_tracebase(True)
-    [pilot_data_alltrace, pilot_ser_alltrace] = pds.simulated_pilot_generate(True)
-    other_data_alltrace = pds.simulated_unkonw_symbol(True)
-    unkonwSymbolp = pds.UnkonwSymbolPayload(True)
+    metric_command = "SINR"
+    argvList = [0]
+    [split_data, split_rssi, pilot_step] = pds.simulated_tracebase(metric_command, argvList)
+    [pilot_data_alltrace, pilot_ser_alltrace] = pds.simulated_pilot_generate(split_data, split_rssi, pilot_step, metric_command, argvList)
+    other_data_alltrace = pds.simulated_unkonw_symbol(split_data, split_rssi, pilot_step, metric_command, argvList)
+    unkonwSymbolp = pds.UnkonwSymbolPayload(split_data, pilot_step)
 
 
     # print len(split_data), len(split_rssi), len(pilot_data_alltrace), len(pilot_ser_alltrace), len(other_data_alltrace), len(unkonwSymbolp)
@@ -140,7 +142,7 @@ if __name__ == '__main__':
 
 
     print '[debug]write no diff rssi data trace'
-    other_nodiff_data_trace = pds.simulated_unkonw_symbol(False)
+    other_nodiff_data_trace = pds.simulated_unkonw_symbol(split_data, split_rssi, pilot_step)
     gr.print_gnuplot(est_ser, unkonwSymbolp,other_nodiff_data_trace,limit_length)
 
     print '[debug]write detailed result'
