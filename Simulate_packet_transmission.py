@@ -91,9 +91,9 @@ def print_detail_result(est_ser, UnkonwSymbolPayload,other_data_alltrace, limit_
     f.close()
     pass
 
-def print_split_trace(limit_length, pilot_step):
+def print_split_trace(split_data, split_rssi,  pilot_step, limit_length):
     trace = []
-    [split_data, split_rssi, pilot_step] = pds.simulated_tracebase(False)
+    # [split_data, split_rssi, pilot_step] = pds.simulated_tracebase(False)
     [raw_data, raw_rssi] = rde.readTrace(  "rx-0-22-11-20140629-15-47-41-with_interference_802.11g")
     for i in range(limit_length[0], limit_length[1]):
         for j in range(len(split_rssi[i])):
@@ -118,10 +118,10 @@ def RSSIdata_dbm():
     pass
 
 if __name__ == '__main__':
-    limit_length = [1,2]
+    limit_length = [20,30]
 
     metric_command = "SINR"
-    argvList = [0]
+    argvList = [1]
     [split_data, split_rssi, pilot_step] = pds.simulated_tracebase(metric_command, argvList)
     [pilot_data_alltrace, pilot_ser_alltrace] = pds.simulated_pilot_generate(split_data, split_rssi, pilot_step, metric_command, argvList)
     other_data_alltrace = pds.simulated_unkonw_symbol(split_data, split_rssi, pilot_step, metric_command, argvList)
@@ -142,14 +142,14 @@ if __name__ == '__main__':
 
 
     print '[debug]write no diff rssi data trace'
-    other_nodiff_data_trace = pds.simulated_unkonw_symbol(split_data, split_rssi, pilot_step)
+    other_nodiff_data_trace = pds.simulated_unkonw_symbol(split_data, split_rssi, pilot_step, metric_command, argvList)
     gr.print_gnuplot(est_ser, unkonwSymbolp,other_nodiff_data_trace,limit_length)
 
     print '[debug]write detailed result'
     print_detail_result(est_ser, unkonwSymbolp, other_nodiff_data_trace, limit_length)
 
     print '[debug]print rssi info'
-    print_split_trace(limit_length, pilot_step)
+    print_split_trace(split_data, split_rssi, pilot_step, limit_length)
 
     print "[!]calc metric"
     [accur_alltrace, detailAccur_alltrace] = Calc_metric(est_ser, unkonwSymbolp,limit_length)
