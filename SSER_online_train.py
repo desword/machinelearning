@@ -4,28 +4,28 @@ import math
 # pilot_data: [ [data of pilot for input element],[RSSI, SNR]... ]
 # pilot_ser :[ ser for each pilot, x1, ... ]
 def onlineLearningMain(pilot_data, pilot_ser, theta):
-	pilot_data =  normalize_pilotdata(pilot_data)
-	theta = online_train(pilot_data, pilot_ser, theta)
-	return theta
-	pass
+    pilot_data =  normalize_pilotdata(pilot_data)
+    theta = online_train(pilot_data, pilot_ser, theta)
+    return theta
+    pass
 
 
 # calculate the square loss when using the update theta
 def calc_loss(pilot_data, pilot_ser, theta):
-	loss = 0
-	for i in range(len(pilot_data)):
-		df = destfunc(theta, pilot_data[i], pilot_ser[i])
-		loss += df**2
-	return loss/len(pilot_data)
-	pass
+    loss = 0
+    for i in range(len(pilot_data)):
+        df = destfunc(theta, pilot_data[i], pilot_ser[i])
+        loss += df**2
+    return loss/len(pilot_data)
+    pass
 
 # scale down the pilot data to [0,1]
 def normalize_pilotdata(pilot_data):
-	for i in range(len(pilot_data)):
-		for j in range(len(pilot_data[i])):
-			pilot_data[i][j] = int(pilot_data[i][j]) * 1.0 / 255
-	return pilot_data
-	pass
+    for i in range(len(pilot_data)):
+        for j in range(len(pilot_data[i])):
+            pilot_data[i][j] = int(pilot_data[i][j]) * 1.0 / 255
+    return pilot_data
+    pass
 
 # p(y=0|x) = exp(-f(x))/ [ 1+ exp(-f(x)) ]
 def destfunc(theta, pilot_data_i, pilot_ser_i):
@@ -52,7 +52,7 @@ def adaplearnrate(learn_rate, pre_err_EMA, error_sum, pre_error_sum ,i,pilot_dat
 # each of the support element has been scale down to [0, 1]
 # pilot_ser :[ ser for each pilot, x1, ... ]
 def online_train(pilot_data, pilot_ser, theta):
-	
+    
     loss = 10.0
     learn_rate = [0.001 for i in range(len(theta))]
     pre_err_EMA = 0
@@ -61,8 +61,8 @@ def online_train(pilot_data, pilot_ser, theta):
 
     # add in the first for multipling the constant variable
     # for i in range(len(pilot_data)):
-    # 	pilot_data[i] = scaledown_pilotrssi()
-    # 	for j in range(len(pilot_data[i])):
+    #     pilot_data[i] = scaledown_pilotrssi()
+    #     for j in range(len(pilot_data[i])):
 
 
     for pIndex in range(len(pilot_data)):
@@ -83,8 +83,14 @@ def online_train(pilot_data, pilot_ser, theta):
         # print "theta[0]:%s, theta[1]:%s\n" % (str(theta[0]) ,str(theta[1]))
 
         loss = calc_loss(pilot_data, pilot_ser, theta)
-
-		# print "loss:%s\n" % (str(loss))
-    print "finalLoss:%s, theta[0]:%s, theta[1]:%s\n" % (str(loss), str(theta[0]) ,str(theta[1]))
+        print_theta(theta, loss)
+        # print "loss:%s\n" % (str(loss))
     return theta
+    pass
+
+def print_theta(theta, loss):
+    print "finalLoss:%s," % (str(loss)),
+    for i in range(len(theta)):
+        print 'theta[%d]:%s,' % (i,str(theta[i])),
+    print ''
     pass
