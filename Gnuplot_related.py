@@ -43,7 +43,7 @@ def print_gnuplot(est_ser, unkonwSymbolp,other_data_alltrace, limit_length):
                     eachline.append('0 0 0 ' + str(other_data_alltrace[i+limit_length[0]][j][0]))
             intofile.append(''.join(eachline) + '\n')
             wholecounter += 1
-    f = open('TFdiag_data_%d_%d.txt' % (limit_length[0], limit_length[1]),'w')
+    f = open('figure/TFdiag_data_%d_%d.txt' % (limit_length[0], limit_length[1]),'w')
     f.writelines(intofile)
     f.close()
     pass

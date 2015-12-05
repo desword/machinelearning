@@ -86,7 +86,7 @@ def print_detail_result(est_ser, UnkonwSymbolPayload,other_data_alltrace, limit_
     for i in range(len(est_ser)):
         for j in range(len(est_ser[i])):
             result.append("[%d-%d][est]:%s, [payload]:%s, [RSSI]:%s \n" % (i,j, str(est_ser[i][j]) , str(unkonwSymbolp[i+limit_length[0]][j]), str(other_data_alltrace[i+limit_length[0]][j][0])))
-    f =open('result_%d_%d.txt' % (limit_length[0],limit_length[1]),'w')
+    f =open('figure/result_%d_%d.txt' % (limit_length[0],limit_length[1]),'w')
     f.writelines(result)
     f.close()
     pass
@@ -108,7 +108,7 @@ def print_split_trace(split_data, split_rssi,  pilot_step, limit_length):
                 trace.append("[pilot][%d-%d][raw_rssi]:%s, [spredRSSI]:%s, [raw_data]:%s\n" % (i,j,rawrssi, split_rssi[i][j], split_data[i][j]))
 
 
-    f = open("rssi_compare_%d_%d.txt" % (limit_length[0], limit_length[1]),'w')
+    f = open("figure/rssi_compare_%d_%d.txt" % (limit_length[0], limit_length[1]),'w')
     f.writelines(trace)
     f.close()
     pass

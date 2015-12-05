@@ -22,7 +22,8 @@ def dbm_to_mw(dbm_data):
     return 10**((dbm_data-30) * 1.0/10)
 
 def mw_to_dbm(mw_data):
-    return 10 * math.log(abs(mw_data) * 1000, 10)
+    return 10 * math.log(mw_data * 1000, 10)
+    # return 10 * math.log(abs(mw_data) * 1000, 10)
 
 # the input rssi must be integer
 def SINR_symbol_metric( rssi_packet, index_symbol, neighbor_level):
@@ -44,12 +45,26 @@ def SINR_symbol_metric( rssi_packet, index_symbol, neighbor_level):
     # calculate the corresponding training data of SINR for current symbol
     symbol_SINR = []
     for i in range(index_beg, index_end):
+        # if int(rssi_packet[i]) < 200:# skip the data that rssi is too small
+        #     continue
         isymbolrssi_dbm = RSSI_raw2dbm(rssi_packet[i])
         isymbolInterference_mw = dbm_to_mw(isymbolrssi_dbm) - signal_packet_mw - noise_mw
+
         symbol_SINR.append( signal_packet_mw/(isymbolInterference_mw + noise_mw) )
 
-        print 'sinr-mw:%s, s:%s, i:%s, n:%s, rssi:%s' % (signal_packet_mw/(isymbolInterference_mw + noise_mw), signal_packet_mw, isymbolInterference_mw, noise_mw, rssi_packet[i])
-        print 'sinr-dbm:%s, s:%s, i:%s, n:%s, rssi:%s' % (signal_packet_mw/(isymbolInterference_mw + noise_mw), mw_to_dbm(signal_packet_mw),mw_to_dbm(isymbolInterference_mw), mw_to_dbm(noise_mw), rssi_packet[i])
+        print i, 'sinr-mw:%s, s:%s, i:%s, n:%s, rssi:%s' % (signal_packet_mw/(isymbolInterference_mw + noise_mw), signal_packet_mw, isymbolInterference_mw, noise_mw, rssi_packet[i])
+
+        tmp_inter_dbm = ''
+        tmp_sig_dbm = ''
+        if isymbolInterference_mw <= 0:
+            tmp_inter_dbm = '-1'
+        else:
+            tmp_inter_dbm = mw_to_dbm(isymbolInterference_mw)
+        if signal_packet_mw <= 0:
+            tmp_sig_dbm = '-1'
+        else:
+            tmp_sig_dbm =  mw_to_dbm(signal_packet_mw)
+        print i,'sinr-dbm:%s, s:%s, i:%s, n:%s, rssi:%s' % (signal_packet_mw/(isymbolInterference_mw + noise_mw),tmp_sig_dbm,tmp_inter_dbm, mw_to_dbm(noise_mw), rssi_packet[i])
     return symbol_SINR
 
 
