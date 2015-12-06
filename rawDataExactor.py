@@ -36,6 +36,30 @@ def readTrace(path_trace):
 
     return [dataTrace, rssiTrace]
 
+
+# discard the packet that has too much bad rssi, and dsicard the rssi raw value that is too low
+def dicard_fault_rssi_packet(dataTrace, rssiTrace):
+    rssiraw_threashold = 150
+    discard_threshold = 0.1 # a fraction of 10% means that the data can not be used
+    filtered_dataTrace = []
+    filtered_rssiTrace = []
+    for i in range(len(dataTrace)):
+        bad_rssicount = 0
+        filtered_dataTrace_packet = []
+        filtered_rssiTrace_packet = []
+        for j in range(len(rssiTrace[i])):
+            if int(rssiTrace[i][j]) < rssiraw_threashold:
+                bad_rssicount += 1
+            else:
+                filtered_rssiTrace_packet.append(rssiTrace[i][j])
+        # if the bad rssi count lower than the threshold, then save the filtered rssi and the packet, otherwise discard this packet
+        if bad_rssicount < discard_threshold * len(rssiTrace[i]):
+            filtered_dataTrace.append(dataTrace[i])
+            filtered_rssiTrace.append(rssiTrace[i])
+    return [filtered_dataTrace, filtered_rssiTrace]
+
+
+
 # simple split for 4 symbol length, the rssi are split correspondingly
 def simpleSplit(data):
     split_data = []

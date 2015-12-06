@@ -5,18 +5,18 @@ import Gnuplot_related as gr
 import rawDataExactor as rde
 
 # groundtruth that true is 0% determine the, false is 100%
-def groudtruth(unkonwSymbolp, limit_length):
-    gt_ser_all = []
-    for i in range(limit_length):
-        gt_ser_packet = []
-        for j in range(len(unkonwSymbolp[i])):
-            if unkonwSymbolp[i][j] != '0':
-                gt_ser_packet.append(0.1)
-            else:
-                gt_ser_packet.append(0.99)
-        gt_ser_all.append(gt_ser_packet)
-    return gt_ser_all
-    pass
+# def groudtruth(unkonwSymbolp, limit_length):
+#     gt_ser_all = []
+#     for i in range(limit_length):
+#         gt_ser_packet = []
+#         for j in range(len(unkonwSymbolp[i])):
+#             if unkonwSymbolp[i][j] != '0':
+#                 gt_ser_packet.append(0.1)
+#             else:
+#                 gt_ser_packet.append(0.99)
+#         gt_ser_all.append(gt_ser_packet)
+#     return gt_ser_all
+#     pass
 
 def estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, limit_length):
     theta = [2 for i in range(len(pilot_data_alltrace[0][0])+ 1)]
@@ -118,10 +118,10 @@ def RSSIdata_dbm():
     pass
 
 if __name__ == '__main__':
-    limit_length = [20,30]
+    limit_length = [0,60]
 
-    metric_command = "SINR"
-    argvList = [1]
+    metric_command = "RSSI"
+    argvList = [2]
     [split_data, split_rssi, pilot_step] = pds.simulated_tracebase(metric_command, argvList)
     [pilot_data_alltrace, pilot_ser_alltrace] = pds.simulated_pilot_generate(split_data, split_rssi, pilot_step, metric_command, argvList)
     other_data_alltrace = pds.simulated_unkonw_symbol(split_data, split_rssi, pilot_step, metric_command, argvList)
@@ -153,27 +153,30 @@ if __name__ == '__main__':
 
     print "[!]calc metric"
     [accur_alltrace, detailAccur_alltrace] = Calc_metric(est_ser, unkonwSymbolp,limit_length)
+    ave_preci = 0;ave_recall = 0
     for i in range(len(accur_alltrace)):
         print "%d:[preci]%s, [recall]:%s" % (i, str(accur_alltrace[i][0]), accur_alltrace[i][1]),
         print "[fp]:%s, [fn]:%s, [tp]:%s, [tn]:%s" % (str(detailAccur_alltrace[i][0]),str(detailAccur_alltrace[i][1]),str(detailAccur_alltrace[i][2]),str(detailAccur_alltrace[i][3]) )
-
+        ave_preci += accur_alltrace[i][0]
+        ave_recall += accur_alltrace[i][1]
+    print '[metrics]:%s_%s, [ave_precision]:%s, [ave_recall]:%s' % ( metric_command, str(argvList[0]), str(ave_preci/len(accur_alltrace)), str(ave_recall/len(accur_alltrace)))
 pass
 
 
-
-def relatederror(est_ser, gt_ser):
-    rt_error_all = []
-    for i in range(len(est_ser)):
-        rt_error_packet = []
-        sumerror = 0
-        # print len(est_ser[i])
-        for j in range(len(est_ser[i])):
-            # print j
-            # rt = (est_ser[i][j] - gt_ser[i][j]) / (gt_ser[i][j])
-            rt = abs(est_ser[i][j] - gt_ser[i][j])
-            sumerror += rt
-            rt_error_packet.append(rt)
-        rt_error_packet.append(sumerror/len(est_ser[i]))# the last element is the average related error
-        rt_error_all.append(rt_error_packet)
-    return rt_error_all
-    pass
+#
+# def relatederror(est_ser, gt_ser):
+#     rt_error_all = []
+#     for i in range(len(est_ser)):
+#         rt_error_packet = []
+#         sumerror = 0
+#         # print len(est_ser[i])
+#         for j in range(len(est_ser[i])):
+#             # print j
+#             # rt = (est_ser[i][j] - gt_ser[i][j]) / (gt_ser[i][j])
+#             rt = abs(est_ser[i][j] - gt_ser[i][j])
+#             sumerror += rt
+#             rt_error_packet.append(rt)
+#         rt_error_packet.append(sumerror/len(est_ser[i]))# the last element is the average related error
+#         rt_error_all.append(rt_error_packet)
+#     return rt_error_all
+#     pass

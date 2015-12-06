@@ -15,7 +15,7 @@ def RSSI_raw2dbm(rssi_rawdata):
     return int(rssi_rawdata)  - 256 - 45
 
 def calc_noise():
-    emp_noise_dbm = -93
+    emp_noise_dbm = -104
     return (dbm_to_mw(emp_noise_dbm))
 
 def dbm_to_mw(dbm_data):
@@ -48,23 +48,48 @@ def SINR_symbol_metric( rssi_packet, index_symbol, neighbor_level):
         # if int(rssi_packet[i]) < 200:# skip the data that rssi is too small
         #     continue
         isymbolrssi_dbm = RSSI_raw2dbm(rssi_packet[i])
-        isymbolInterference_mw = dbm_to_mw(isymbolrssi_dbm) - signal_packet_mw - noise_mw
+        isymbolrssi_mw = dbm_to_mw(isymbolrssi_dbm)
+        isymbolInterference_mw = dbm_to_mw(isymbolrssi_mw) - signal_packet_mw - noise_mw
 
-        symbol_SINR.append( signal_packet_mw/(isymbolInterference_mw + noise_mw) )
+        # symbol_SINR.append( signal_packet_mw/(isymbolInterference_mw + noise_mw) )
+        # save the dbm value as the SINR, which is more accurate
+        symbol_sinr_mwrate = signal_packet_mw/(isymbolInterference_mw + noise_mw)
+        symbol_sinr_dbmrate = mw_to_dbm(symbol_sinr_mwrate)
+        symbol_SINR.append( symbol_sinr_dbmrate )
 
-        print i, 'sinr-mw:%s, s:%s, i:%s, n:%s, rssi:%s' % (signal_packet_mw/(isymbolInterference_mw + noise_mw), signal_packet_mw, isymbolInterference_mw, noise_mw, rssi_packet[i])
+        # print i, 'sinr[mw]%s,[dbm]%s' % (symbol_sinr_mwrate, symbol_sinr_dbmrate)
+
 
         tmp_inter_dbm = ''
         tmp_sig_dbm = ''
         if isymbolInterference_mw <= 0:
+            # print i,'sinr:%s, s:[mw]%s,[dbm]%s, i:[mw]%s,[dbm]%s, n:[mw]%s,[dbm]%s , rssi:%s,[mw]%s' % \
+            #     (signal_packet_mw/(isymbolInterference_mw + noise_mw),
+            #      signal_packet_mw,tmp_sig_dbm,
+            #      isymbolInterference_mw, tmp_inter_dbm,
+            #      noise_mw, mw_to_dbm(noise_mw),
+            #      rssi_packet[i],isymbolrssi_mw)
             tmp_inter_dbm = '-1'
         else:
             tmp_inter_dbm = mw_to_dbm(isymbolInterference_mw)
         if signal_packet_mw <= 0:
+            # print i,'sinr:%s, s:[mw]%s,[dbm]%s, i:[mw]%s,[dbm]%s, n:[mw]%s,[dbm]%s , rssi:%s,[mw]%s' % \
+            #     (signal_packet_mw/(isymbolInterference_mw + noise_mw),
+            #      signal_packet_mw,tmp_sig_dbm,
+            #      isymbolInterference_mw, tmp_inter_dbm,
+            #      noise_mw, mw_to_dbm(noise_mw),
+            #      rssi_packet[i],isymbolrssi_mw)
             tmp_sig_dbm = '-1'
         else:
             tmp_sig_dbm =  mw_to_dbm(signal_packet_mw)
-        print i,'sinr-dbm:%s, s:%s, i:%s, n:%s, rssi:%s' % (signal_packet_mw/(isymbolInterference_mw + noise_mw),tmp_sig_dbm,tmp_inter_dbm, mw_to_dbm(noise_mw), rssi_packet[i])
+        if isymbolInterference_mw <=0 or signal_packet_mw <=0:
+            print i,'sinr:%s, s:[mw]%s,[dbm]%s, i:[mw]%s,[dbm]%s, n:[mw]%s,[dbm]%s , rssi:%s,[dmb]%s,[mw]%s, [minrssi]%s[dbm]%s' % \
+                    (signal_packet_mw/(isymbolInterference_mw + noise_mw),
+                     signal_packet_mw,tmp_sig_dbm,
+                     isymbolInterference_mw, tmp_inter_dbm,
+                     noise_mw, mw_to_dbm(noise_mw),
+                     rssi_packet[i],isymbolrssi_dbm, isymbolrssi_mw,
+                     min(rssi_packet), RSSI_raw2dbm(min(rssi_packet)))
     return symbol_SINR
 
 

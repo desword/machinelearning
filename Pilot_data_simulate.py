@@ -11,31 +11,31 @@ def SplitEachPacket2Symbol(data, len_symbol):
 
 
 #directly using the rssi data corresponding to the data
-def one_one_RSSI_metrics(rssi_packet, index_data):
-    return [rssi_packet[index_data]]
-    pass
+# def one_one_RSSI_metrics(rssi_packet, index_data):
+#     return [rssi_packet[index_data]]
+#     pass
 
 # using multiple rssi value surrounded with data as input to training the model
 # the rssi value still is the difference between the majority.
-def multi_one_RSSI_metrics(rssi_packet, index_data, neighbor_level):
-    max_left_rssinum = neighbor_level
-    max_right_rssinum = neighbor_level
-    index_beg = index_data - max_left_rssinum
-    if index_beg < 0:
-        index_beg = 0
-    index_end = index_data + max_right_rssinum + 1
-    if index_end > len(rssi_packet):
-        index_end = len(rssi_packet)
-    return rssi_packet[index_beg:index_end]
-    pass
+# def multi_one_RSSI_metrics(rssi_packet, index_data, neighbor_level):
+#     max_left_rssinum = neighbor_level
+#     max_right_rssinum = neighbor_level
+#     index_beg = index_data - max_left_rssinum
+#     if index_beg < 0:
+#         index_beg = 0
+#     index_end = index_data + max_right_rssinum + 1
+#     if index_end > len(rssi_packet):
+#         index_end = len(rssi_packet)
+#     return rssi_packet[index_beg:index_end]
+#     pass
 
 # generate the metrics that the training data input
 # input the rssi trace, and return the metrics parameters list corresponding to the data trace
-def generateTrainMetrics(rssi_packet, index_data):
-    # return one_one_RSSI_metrics(rssi_packet, index_data)
-
-    return multi_one_RSSI_metrics(rssi_packet, index_data, 2)
-    pass
+# def generateTrainMetrics(rssi_packet, index_data):
+#     # return one_one_RSSI_metrics(rssi_packet, index_data)
+#
+#     return multi_one_RSSI_metrics(rssi_packet, index_data, 2)
+#     pass
 
 
 # Pilot_data_alltrace : [ [for each packet],[ [chosed pilot data],[RSSI,snr]   ]  ]
@@ -89,7 +89,6 @@ def protocal_802_15_4_modify(s_dataTrace, s_rssiTrace, len_symbol):
     return [s_dataTrace, s_rssiTrace]
     pass
 
-
 # command= define the metrics that is RSSI or SINR,
 # argvList = define the arguments that our metrics need.
 def simulated_tracebase( metrics_command, argvList):
@@ -99,6 +98,8 @@ def simulated_tracebase( metrics_command, argvList):
     thres_dtlength = packet_len * (8/ len_symbol)
 
     [dataTrace, rssiTrace] = rde.readTrace("rx-0-22-11-20140629-15-47-41-with_interference_802.11g")
+
+    [dataTrace, rssiTrace] = rde.dicard_fault_rssi_packet(dataTrace, rssiTrace)
 
     # dataTrace = rde.simpleSplit(dataTrace)# split the data trace into symbol, 4 bit/symbol in this case
     [s_dataTrace, s_rssiTrace] = rde.scaledRSSI(dataTrace, rssiTrace, thres_dtlength)# linear insert value
@@ -141,58 +142,58 @@ def simulated_pilot_generate(split_data, split_rssi, pilot_step, metrics_command
     pass
 
 
-def relatedError(est_ser, gt_ser):
-    RE = []
-    for i in range(len(est_ser)):
-        # diff = est_ser[i]  - gt_ser[i]
-
-        RE.append("[%d]est-%s, gt-%s\n" % (i, str(est_ser[i]), str(gt_ser[i]) ))
-    return RE
-    pass
-
-# estimate the ser
-def naive_estimator(data, rssi, pilot_step):
-    EST_SER_allpacket = []
-    for pkgindex in range(len(rssi)):
-        baseRSSI = int(max(rssi[pkgindex],key=rssi[pkgindex].count))
-        temphigh = baseRSSI + 5
-        templow = baseRSSI + 2
-
-        #determine the low and high according to the pilot
-        for plindex in range(0, len(rssi[pkgindex]), pilot_step):
-            if data[pkgindex][plindex] != '0':# if current bit is wrong , then update the minim RSSI for high
-                temphigh = min(temphigh, rssi[pkgindex][plindex])
-            else:
-                templow = max(templow, rssi[pkgindex][plindex])
-
-
-        error_symbol_counter =0
-        for rsindex in range(len(rssi[pkgindex])):
-            if rssi[pkgindex][rsindex] >= temphigh:
-                error_symbol_counter += 1
-            elif rssi[pkgindex][rsindex] < temphigh and rssi[pkgindex][rsindex] > templow:
-                count = (rssi[pkgindex][rsindex] - templow) * 1.0/ (temphigh - templow)
-                error_symbol_counter += count
-        est_pkg_ser = error_symbol_counter * 1.0 / len(rssi[pkgindex])
-        if est_pkg_ser == 1:
-            print templow, temphigh
-            print rssi[pkgindex][:12]
-
-        EST_SER_allpacket.append(est_pkg_ser)
-    return EST_SER_allpacket
-    pass
-
-# default that data all zero, then the SER for every packet
-def GroundTruth_SER_pktAverage(data):
-    GT_SER_allPacket = []
-    for eachPacket in data:
-        error_symbol_counter = 0
-        for eachsymbol in eachPacket:
-            if eachsymbol != '0':
-                error_symbol_counter += 1
-        pkg_ser = error_symbol_counter * 1.0/ len(eachPacket)
-        GT_SER_allPacket.append(pkg_ser)
-    return GT_SER_allPacket
-    pass
+# def relatedError(est_ser, gt_ser):
+#     RE = []
+#     for i in range(len(est_ser)):
+#         # diff = est_ser[i]  - gt_ser[i]
+#
+#         RE.append("[%d]est-%s, gt-%s\n" % (i, str(est_ser[i]), str(gt_ser[i]) ))
+#     return RE
+#     pass
+#
+# # estimate the ser
+# def naive_estimator(data, rssi, pilot_step):
+#     EST_SER_allpacket = []
+#     for pkgindex in range(len(rssi)):
+#         baseRSSI = int(max(rssi[pkgindex],key=rssi[pkgindex].count))
+#         temphigh = baseRSSI + 5
+#         templow = baseRSSI + 2
+#
+#         #determine the low and high according to the pilot
+#         for plindex in range(0, len(rssi[pkgindex]), pilot_step):
+#             if data[pkgindex][plindex] != '0':# if current bit is wrong , then update the minim RSSI for high
+#                 temphigh = min(temphigh, rssi[pkgindex][plindex])
+#             else:
+#                 templow = max(templow, rssi[pkgindex][plindex])
+#
+#
+#         error_symbol_counter =0
+#         for rsindex in range(len(rssi[pkgindex])):
+#             if rssi[pkgindex][rsindex] >= temphigh:
+#                 error_symbol_counter += 1
+#             elif rssi[pkgindex][rsindex] < temphigh and rssi[pkgindex][rsindex] > templow:
+#                 count = (rssi[pkgindex][rsindex] - templow) * 1.0/ (temphigh - templow)
+#                 error_symbol_counter += count
+#         est_pkg_ser = error_symbol_counter * 1.0 / len(rssi[pkgindex])
+#         if est_pkg_ser == 1:
+#             print templow, temphigh
+#             print rssi[pkgindex][:12]
+#
+#         EST_SER_allpacket.append(est_pkg_ser)
+#     return EST_SER_allpacket
+#     pass
+#
+# # default that data all zero, then the SER for every packet
+# def GroundTruth_SER_pktAverage(data):
+#     GT_SER_allPacket = []
+#     for eachPacket in data:
+#         error_symbol_counter = 0
+#         for eachsymbol in eachPacket:
+#             if eachsymbol != '0':
+#                 error_symbol_counter += 1
+#         pkg_ser = error_symbol_counter * 1.0/ len(eachPacket)
+#         GT_SER_allPacket.append(pkg_ser)
+#     return GT_SER_allPacket
+#     pass
 
 
