@@ -54,6 +54,9 @@ def choosePilot(data,rssi, pilot_step, metrics_command, argvList):
             else:
                 pilot_ser_packet.append(random.uniform(0,0.01)) # assume the pilot error has low confidence
             pilot_data_element = mds.metric_management(metrics_command, argvList, rssi[pkgindex], plindex)
+
+            # print 'pilot_element-%s-%s' % (pkgindex, plindex), pilot_data_element
+
             pilot_data_packet.append(pilot_data_element)
         Pilot_data_alltrace.append(pilot_data_packet)
         pilot_ser_alltrace.append(pilot_ser_packet)

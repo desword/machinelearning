@@ -33,17 +33,24 @@ def SINR_symbol_metric( rssi_packet, index_symbol, neighbor_level):
     signal_packet_mw = dbm_to_mw(minm_packet_RSSI_dbm) - noise_mw
 
     # calculate the extract fraction rssi data
+    symbol_SINR = []
+    start_poi = 0
+
     max_left_rssinum = neighbor_level
     max_right_rssinum = neighbor_level
     index_beg = index_symbol - max_left_rssinum
     if index_beg < 0:
+        for i in range(abs(index_beg)):
+            symbol_SINR.append(0)
         index_beg = 0
+        start_poi = len(symbol_SINR)
     index_end = index_symbol + max_right_rssinum + 1
     if index_end > len(rssi_packet):
+        for i in range(index_end - len(rssi_packet)):
+            symbol_SINR.append(0)
         index_end = len(rssi_packet)
 
     # calculate the corresponding training data of SINR for current symbol
-    symbol_SINR = []
     for i in range(index_beg, index_end):
         # if int(rssi_packet[i]) < 200:# skip the data that rssi is too small
         #     continue
@@ -60,7 +67,7 @@ def SINR_symbol_metric( rssi_packet, index_symbol, neighbor_level):
         symbol_sinr_mwrate = signal_packet_mw/(isymbolInterference_mw + noise_mw)
         symbol_sinr_dbmrate = mw_to_dbm(symbol_sinr_mwrate)
         # symbol_sinr_dbmrate = mw_to_dbm(signal_packet_mw) - mw_to_dbm(isymbolInterference_mw + noise_mw)
-        symbol_SINR.append( symbol_sinr_dbmrate )
+        symbol_SINR.insert(start_poi, symbol_sinr_dbmrate)
 
 
         # print i, 'sinr[mw]%s,[dbm]%s,[sig_dbm]%s,%s,[inter+noist_dbm]%s,%s' % \

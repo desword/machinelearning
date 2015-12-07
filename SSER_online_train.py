@@ -23,7 +23,7 @@ def calc_loss(pilot_data, pilot_ser, theta):
 def normalize_pilotdata(pilot_data):
     for i in range(len(pilot_data)):
         for j in range(len(pilot_data[i])):
-            pilot_data[i][j] = int(pilot_data[i][j]) * 1.0 / 255
+            pilot_data[i][j] = int(pilot_data[i][j]) * 1.0 / 80
     return pilot_data
     pass
 
@@ -57,7 +57,7 @@ def online_train(pilot_data, pilot_ser, theta):
     learn_rate = [0.001 for i in range(len(theta))]
     pre_err_EMA = 0
     pre_error_sum = 0
-
+    # print pilot_data
 
     # add in the first for multipling the constant variable
     # for i in range(len(pilot_data)):
@@ -80,6 +80,8 @@ def online_train(pilot_data, pilot_ser, theta):
         for j in range(1, len(theta)):
             theta[j] += (learn_rate[j] * error_sum * pilot_data[i][j-1])
 
+
+        # print '[%s]' % (pIndex), pilot_data[i]
         # print "theta[0]:%s, theta[1]:%s\n" % (str(theta[0]) ,str(theta[1]))
 
         loss = calc_loss(pilot_data, pilot_ser, theta)

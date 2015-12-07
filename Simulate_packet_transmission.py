@@ -18,13 +18,14 @@ import rawDataExactor as rde
 #     return gt_ser_all
 #     pass
 
-def estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, limit_length):
-    theta = [1 for i in range(len(pilot_data_alltrace[0][0])+ 1)]
+def estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, limit_length, theta_num):
+    theta = [0.4 for i in range(theta_num)]
     est_ser_all = []
     # for i in range(len(pilot_data_alltrace)):
     for i in range(limit_length[0], limit_length[1]):
         # theta = [1 for j in range(len(pilot_data_alltrace[0][0])+ 1)]
 
+        # print '%s', pilot_data_alltrace[i]
         theta = ot.onlineLearningMain(pilot_data_alltrace[i], pilot_ser_alltrace[i], theta)
         est_ser_packet = []
         # estimate every symbol error rate except the pilot
@@ -35,6 +36,7 @@ def estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, l
             # dis_fun = 1 / (1 + math.e**(up_fun))
             dis_fun = math.e**(up_fun) / (1 + math.e**(up_fun))
             est_ser_packet.append(dis_fun)
+            # print '[%s-%s]' %(i,j), other_data_alltrace[i][j]
         # print "[%d]:" % (i), est_ser_packet, '\n'
         est_ser_all.append(est_ser_packet)
     return est_ser_all
@@ -137,7 +139,7 @@ if __name__ == '__main__':
 
     # print len(split_data), len(split_rssi), len(pilot_data_alltrace), len(pilot_ser_alltrace), len(other_data_alltrace), len(unkonwSymbolp)
     print '[+]start est_ser'
-    est_ser = estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, limit_length)
+    est_ser = estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, limit_length, argvList[0] * 2 +1)
     # print 'start gt_ser'
     # gt_ser = groudtruth(unkonwSymbolp, limit_length)
     # print 'rstart rt_err'
