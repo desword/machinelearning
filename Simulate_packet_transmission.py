@@ -19,7 +19,7 @@ import rawDataExactor as rde
 #     pass
 
 def estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, limit_length):
-    theta = [2 for i in range(len(pilot_data_alltrace[0][0])+ 1)]
+    theta = [1 for i in range(len(pilot_data_alltrace[0][0])+ 1)]
     est_ser_all = []
     # for i in range(len(pilot_data_alltrace)):
     for i in range(limit_length[0], limit_length[1]):
@@ -81,12 +81,20 @@ def Calc_metric(est_ser, unkonwSymbolp,limit_length):
         accur_alltrace.append(accru_packet)
     return [accur_alltrace, detailAccur_alltrace]
 
-def print_detail_result(est_ser, UnkonwSymbolPayload,other_data_alltrace, limit_length):
+def print_detail_result(est_ser, UnkonwSymbolPayload,other_data_alltrace, limit_length,metric_command ):
     result = []
     for i in range(len(est_ser)):
         for j in range(len(est_ser[i])):
-            result.append("[%d-%d][est]:%s, [payload]:%s, [RSSI]:%s \n" % (i,j, str(est_ser[i][j]) , str(unkonwSymbolp[i+limit_length[0]][j]), str(other_data_alltrace[i+limit_length[0]][j][0])))
-    f =open('figure/result_%d_%d.txt' % (limit_length[0],limit_length[1]),'w')
+            metric_list = []
+            for k in range(len(other_data_alltrace[i][j])):
+                metric_list.append('[%s]%s' % (k,other_data_alltrace[i][j][k]))
+            metric_data = ','.join(metric_list)
+
+            result.append("[%d-%d][est]:%s, [payload]:%s, [Metric-%s]:%s \n" %
+                          (i,j, str(est_ser[i][j]) ,
+                           str(unkonwSymbolp[i+limit_length[0]][j]),
+                           metric_command,metric_data))
+    f =open('figure/result_%d_%d_%s.txt' % (limit_length[0],limit_length[1], metric_command),'w')
     f.writelines(result)
     f.close()
     pass
@@ -114,14 +122,13 @@ def print_split_trace(split_data, split_rssi,  pilot_step, limit_length):
     pass
 
 
-def RSSIdata_dbm():
-    pass
+
 
 if __name__ == '__main__':
-    limit_length = [0,60]
+    limit_length = [0,12]
 
-    metric_command = "RSSI"
-    argvList = [2]
+    metric_command = "SINR"
+    argvList = [1]
     [split_data, split_rssi, pilot_step] = pds.simulated_tracebase(metric_command, argvList)
     [pilot_data_alltrace, pilot_ser_alltrace] = pds.simulated_pilot_generate(split_data, split_rssi, pilot_step, metric_command, argvList)
     other_data_alltrace = pds.simulated_unkonw_symbol(split_data, split_rssi, pilot_step, metric_command, argvList)
@@ -146,7 +153,7 @@ if __name__ == '__main__':
     gr.print_gnuplot(est_ser, unkonwSymbolp,other_nodiff_data_trace,limit_length)
 
     print '[debug]write detailed result'
-    print_detail_result(est_ser, unkonwSymbolp, other_nodiff_data_trace, limit_length)
+    print_detail_result(est_ser, unkonwSymbolp, other_nodiff_data_trace, limit_length,metric_command)
 
     print '[debug]print rssi info'
     print_split_trace(split_data, split_rssi, pilot_step, limit_length)

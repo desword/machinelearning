@@ -28,9 +28,9 @@ def mw_to_dbm(mw_data):
 # the input rssi must be integer
 def SINR_symbol_metric( rssi_packet, index_symbol, neighbor_level):
     noise_mw = calc_noise()
-    majority_packet_RSSI_dbm = RSSI_raw2dbm(int(min(rssi_packet)))
+    minm_packet_RSSI_dbm = RSSI_raw2dbm(int(min(rssi_packet)))
     # majority_packet_RSSI_dbm = RSSI_raw2dbm(int(max(rssi_packet, key=rssi_packet.count)))
-    signal_packet_mw = dbm_to_mw(majority_packet_RSSI_dbm) - noise_mw
+    signal_packet_mw = dbm_to_mw(minm_packet_RSSI_dbm) - noise_mw
 
     # calculate the extract fraction rssi data
     max_left_rssinum = neighbor_level
@@ -49,15 +49,24 @@ def SINR_symbol_metric( rssi_packet, index_symbol, neighbor_level):
         #     continue
         isymbolrssi_dbm = RSSI_raw2dbm(rssi_packet[i])
         isymbolrssi_mw = dbm_to_mw(isymbolrssi_dbm)
-        isymbolInterference_mw = dbm_to_mw(isymbolrssi_mw) - signal_packet_mw - noise_mw
+        # isymbolInterference_mw = dbm_to_mw(isymbolrssi_mw) - signal_packet_mw - noise_mw
+        isymbolInterference_mw = isymbolrssi_mw - dbm_to_mw(minm_packet_RSSI_dbm)
 
         # symbol_SINR.append( signal_packet_mw/(isymbolInterference_mw + noise_mw) )
         # save the dbm value as the SINR, which is more accurate
+
+        scale = 10**15
+
         symbol_sinr_mwrate = signal_packet_mw/(isymbolInterference_mw + noise_mw)
         symbol_sinr_dbmrate = mw_to_dbm(symbol_sinr_mwrate)
+        # symbol_sinr_dbmrate = mw_to_dbm(signal_packet_mw) - mw_to_dbm(isymbolInterference_mw + noise_mw)
         symbol_SINR.append( symbol_sinr_dbmrate )
 
-        # print i, 'sinr[mw]%s,[dbm]%s' % (symbol_sinr_mwrate, symbol_sinr_dbmrate)
+
+        # print i, 'sinr[mw]%s,[dbm]%s,[sig_dbm]%s,%s,[inter+noist_dbm]%s,%s' % \
+        #          (symbol_sinr_mwrate, symbol_sinr_dbmrate,
+        #           signal_packet_mw, mw_to_dbm(signal_packet_mw),
+        #           str(isymbolInterference_mw + noise_mw) , mw_to_dbm(isymbolInterference_mw + noise_mw))
 
 
         tmp_inter_dbm = ''
@@ -82,7 +91,7 @@ def SINR_symbol_metric( rssi_packet, index_symbol, neighbor_level):
             tmp_sig_dbm = '-1'
         else:
             tmp_sig_dbm =  mw_to_dbm(signal_packet_mw)
-        if isymbolInterference_mw <=0 or signal_packet_mw <=0:
+        if isymbolInterference_mw <0 or signal_packet_mw <=0:
             print i,'sinr:%s, s:[mw]%s,[dbm]%s, i:[mw]%s,[dbm]%s, n:[mw]%s,[dbm]%s , rssi:%s,[dmb]%s,[mw]%s, [minrssi]%s[dbm]%s' % \
                     (signal_packet_mw/(isymbolInterference_mw + noise_mw),
                      signal_packet_mw,tmp_sig_dbm,
