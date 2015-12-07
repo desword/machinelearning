@@ -19,24 +19,30 @@ import rawDataExactor as rde
 #     pass
 
 def estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, limit_length, theta_num):
-    theta = [0.4 for i in range(theta_num)]
+    theta = [2 for i in range(theta_num)]
     est_ser_all = []
     # for i in range(len(pilot_data_alltrace)):
+
+
     for i in range(limit_length[0], limit_length[1]):
         # theta = [1 for j in range(len(pilot_data_alltrace[0][0])+ 1)]
 
         # print '%s', pilot_data_alltrace[i]
         theta = ot.onlineLearningMain(pilot_data_alltrace[i], pilot_ser_alltrace[i], theta)
         est_ser_packet = []
+        nor_other_data_packet = ot.normalize_pilotdata(other_data_alltrace[i])
         # estimate every symbol error rate except the pilot
-        for j in range(len(other_data_alltrace[i])):
+        for j in range(len(nor_other_data_packet)):
             up_fun = theta[0]
             for k in range(1, len(theta)):
-                up_fun += (theta[k] * int(other_data_alltrace[i][j][k-1]))
+                up_fun += (theta[k] * nor_other_data_packet[j][k-1])
+                # print 'theta[%s]%s' % (k , theta[k] * int(nor_other_data_packet[j][k-1])),
             # dis_fun = 1 / (1 + math.e**(up_fun))
             dis_fun = math.e**(up_fun) / (1 + math.e**(up_fun))
             est_ser_packet.append(dis_fun)
-            # print '[%s-%s]' %(i,j), other_data_alltrace[i][j]
+            # print '[%s-%s]' %(i,j), nor_other_data_packet[j], \
+            #     '[%s/(1+%s)] = %s' % (math.e**(up_fun), math.e**(up_fun), dis_fun)
+
         # print "[%d]:" % (i), est_ser_packet, '\n'
         est_ser_all.append(est_ser_packet)
     return est_ser_all
@@ -129,8 +135,8 @@ def print_split_trace(split_data, split_rssi,  pilot_step, limit_length):
 if __name__ == '__main__':
     limit_length = [0,12]
 
-    metric_command = "SINR"
-    argvList = [1]
+    metric_command = "RSSI"
+    argvList = [0]
     [split_data, split_rssi, pilot_step] = pds.simulated_tracebase(metric_command, argvList)
     [pilot_data_alltrace, pilot_ser_alltrace] = pds.simulated_pilot_generate(split_data, split_rssi, pilot_step, metric_command, argvList)
     other_data_alltrace = pds.simulated_unkonw_symbol(split_data, split_rssi, pilot_step, metric_command, argvList)
