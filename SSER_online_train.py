@@ -3,6 +3,7 @@ import math
 
 # pilot_data: [ [data of pilot for input element],[RSSI, SNR]... ]
 # pilot_ser :[ ser for each pilot, x1, ... ]
+# a pilot data is a packet
 def onlineLearningMain(pilot_data, pilot_ser, theta):
     pilot_data =  normalize_pilotdata(pilot_data)
     theta = online_train(pilot_data, pilot_ser, theta)
@@ -46,9 +47,9 @@ def adaplearnrate(learn_rate, pre_err_EMA, error_sum, pre_error_sum ,i,pilot_dat
     #exponential moving average
     curEMA = (2* error_sum * error_sum + i * pre_err_EMA)/ (i+2)
 
-    learn_rate[0]  = max(0.5, 1+ 0.8* (error_sum)* (pre_error_sum)/curEMA ) * learn_rate[0]
-    for i in range(1, len(learn_rate)):
-        learn_rate[i] = max(0.5, 1+ 0.8 * (error_sum * pilot_data_i[i-1]) * (pre_error_sum * pre_pilot_data_i[i-1]) /curEMA) * learn_rate[i]
+    # learn_rate[0]  = max(0.5, 1+ 0.8* (error_sum)* (pre_error_sum)/curEMA ) * learn_rate[0]
+    for i in range(len(learn_rate)):
+        learn_rate[i] = max(0.5, 1+ 0.8 * (error_sum * pilot_data_i[i]) * (pre_error_sum * pre_pilot_data_i[i]) /curEMA) * learn_rate[i]
     return [curEMA, learn_rate]
 
 
@@ -59,9 +60,12 @@ def online_train(pilot_data, pilot_ser, theta):
     
     loss = 10.0
     learn_rate = [0.001 for i in range(len(theta))]
+    deta_theta_avesquare = [0 for i in range(len(theta))]
+    deta_theta = [0 for i in range(len(theta))]
+
     pre_err_EMA = 0
     pre_error_sum = 0
-    max_iterate = 100
+    max_iterate = len(pilot_data)
     # print pilot_data
 
     # add in the first for multipling the constant variable
@@ -78,25 +82,34 @@ def online_train(pilot_data, pilot_ser, theta):
 
         error_sum = destfunc(theta, pilot_data[i], pilot_ser[i])
 
-        deta_theta_avesquare_pre = 0
-        for thetaIndex in range(len(theta)):
-            gradient = error_sum * pilot_data[i][thetaIndex]
-            deta_theta_pre = gradient
-            deta_theta = theta[thetaIndex] * gradient
-            deta_theta_avesquare = 0.8 * deta_theta_avesquare_pre + 0.2 * (deta_theta ** 2)
-            learn_rate[thetaIndex] = learn_rate[thetaIndex] * max( 0.5 , 1 + 0.8 * (deta_theta * deta_theta_pre / deta_theta_avesquare)  )
-            theta[thetaIndex] = theta[thetaIndex] + learn_rate[thetaIndex] * deta_theta
-            deta_theta_avesquare_pre = deta_theta_avesquare
-            print theta
+        ''' papers way'''
+        # for ti in range(len(theta)):
+        #     deta_theta_pre = deta_theta[ti]
+        #     deta_theta[ti] = error_sum * pilot_data[i][ti]
+        #
+        #
+        #     deta_theta_avesquare[ti] = (2 * deta_theta[ti] * deta_theta[ti] + i * deta_theta_avesquare[ti])/(i+2)
+        #     # deta_theta_avesquare[ti] = 0.8 * deta_theta_avesquare[ti] + 0.2 * (deta_theta[ti] ** 2)
+        #     if deta_theta_avesquare[ti] != 0:
+        #         learn_rate[ti] = learn_rate[ti] * max( 0.5 , 1 + 0.8 *
+        #                 (deta_theta_pre * deta_theta[ti] / deta_theta_avesquare[ti]))
+        #
+        #     ''''simple way to update the learning rate'''
+        #     # learn_rate[thetaIndex] =
+        #
+        #
+        #     theta[ti] = theta[ti] + learn_rate[ti] * deta_theta[ti]
+
+            # print theta
 
 
-        # # upda the learn rate
-        # [pre_err_EMA , learn_rate]= adaplearnrate(learn_rate, pre_err_EMA, error_sum, pre_error_sum ,i,pilot_data[i], pilot_data[i-1])
-        # pre_error_sum = error_sum
-        # # update the theta with the error sum and learn rate
+        # upda the learn rate
+        [pre_err_EMA , learn_rate]= adaplearnrate(learn_rate, pre_err_EMA, error_sum, pre_error_sum ,i,pilot_data[i], pilot_data[i-1])
+        pre_error_sum = error_sum
+        # update the theta with the error sum and learn rate
         # theta[0] += (learn_rate[0] * error_sum)
-        # for j in range(1, len(theta)):
-        #     theta[j] += (learn_rate[j] * error_sum * pilot_data[i][j-1])
+        for j in range(len(theta)):
+            theta[j] += (learn_rate[j] * error_sum * pilot_data[i][j])
 
         # print '[%s]' % (pIndex), pilot_data[i]
         # print "theta[0]:%s, theta[1]:%s\n" % (str(theta[0]) ,str(theta[1]))
