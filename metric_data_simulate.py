@@ -94,8 +94,11 @@ def SINR_symbol_metric( rssi_packet, index_symbol, neighbor_level):
                      min(rssi_packet), RSSI_raw2dbm(min(rssi_packet)))
     return symbol_SINR
 
+
+# add the extra data for align the training data.
 def filldata_for_learning(packet_metrics, index_symbol, neighbor_level, metrics_list):
-    start_poi = 0
+    start_poi = 1
+    metrics_list.append(1.0) # add for the first theta
     max_left_rssinum = neighbor_level
     max_right_rssinum = neighbor_level
     index_beg = index_symbol - max_left_rssinum

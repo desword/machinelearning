@@ -31,15 +31,27 @@ def estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, l
         theta = ot.onlineLearningMain(pilot_data_alltrace[i], pilot_ser_alltrace[i], theta)
         est_ser_packet = []
         nor_other_data_packet = ot.normalize_pilotdata(other_data_alltrace[i])
-        # estimate every symbol error rate except the pilot
+
+        # estimate new algorithm
         for j in range(len(nor_other_data_packet)):
-            up_fun = theta[0]
-            for k in range(1, len(theta)):
-                up_fun += (theta[k] * nor_other_data_packet[j][k-1])
+            up_fun = 0
+            for k in range(len(theta)):
+                up_fun += (theta[k] * nor_other_data_packet[j][k])
                 # print 'theta[%s]%s' % (k , theta[k] * int(nor_other_data_packet[j][k-1])),
             # dis_fun = 1 / (1 + math.e**(up_fun))
             dis_fun = math.e**(up_fun) / (1 + math.e**(up_fun))
             est_ser_packet.append(dis_fun)
+
+
+        # estimate every symbol error rate except the pilot
+        # for j in range(len(nor_other_data_packet)):
+        #     up_fun = theta[0]
+        #     for k in range(1, len(theta)):
+        #         up_fun += (theta[k] * nor_other_data_packet[j][k-1])
+        #         # print 'theta[%s]%s' % (k , theta[k] * int(nor_other_data_packet[j][k-1])),
+        #     # dis_fun = 1 / (1 + math.e**(up_fun))
+        #     dis_fun = math.e**(up_fun) / (1 + math.e**(up_fun))
+        #     est_ser_packet.append(dis_fun)
             # print '[%s-%s]' %(i,j), nor_other_data_packet[j], \
             #     '[%s/(1+%s)] = %s' % (math.e**(up_fun), math.e**(up_fun), dis_fun)
 
@@ -116,7 +128,7 @@ def print_detail_result(est_ser, UnkonwSymbolPayload,other_data_alltrace, limit_
 
             result.append("[%d-%d][est]:%s, [payload]:%s, [Metric-%s]:%s \n" %
                           (i,j, str(est_ser[i][j]) ,
-                           str(unkonwSymbolp[i+limit_length[0]][j]),
+                           str(UnkonwSymbolPayload[i+limit_length[0]][j]),
                            metric_command,metric_data))
     f =open('figure/result_%d_%d_%s.txt' % (limit_length[0],limit_length[1], metric_command),'w')
     f.writelines(result)
@@ -147,12 +159,11 @@ def print_split_trace(split_data, split_rssi,  pilot_step, limit_length):
 
 
 
+def algortihmtest(metric_c, argvL):
+    limit_length = [0,30]
 
-if __name__ == '__main__':
-    limit_length = [0,12]
-
-    metric_command = "SINR"
-    argvList = [1]
+    metric_command = metric_c
+    argvList = argvL
     [split_data, split_rssi, pilot_step] = pds.simulated_tracebase(metric_command, argvList)
     [pilot_data_alltrace, pilot_ser_alltrace] = pds.simulated_pilot_generate(split_data, split_rssi, pilot_step, metric_command, argvList)
     other_data_alltrace = pds.simulated_unkonw_symbol(split_data, split_rssi, pilot_step, metric_command, argvList)
@@ -172,29 +183,45 @@ if __name__ == '__main__':
 
 
 
-    print '[debug]write no diff rssi data trace'
+    # print '[debug]write no diff rssi data trace'
     other_nodiff_data_trace = pds.simulated_unkonw_symbol(split_data, split_rssi, pilot_step, metric_command, argvList)
     gr.print_gnuplot(est_ser, unkonwSymbolp,other_nodiff_data_trace,limit_length)
 
-    print '[debug]write detailed result'
+    # print '[debug]write detailed result'
     print_detail_result(est_ser, unkonwSymbolp, other_nodiff_data_trace, limit_length,metric_command)
 
-    print '[debug]print rssi info'
+    # print '[debug]print rssi info'
     print_split_trace(split_data, split_rssi, pilot_step, limit_length)
 
-    print "[!]calc metric"
+    # print "[!]calc metric"
     [accur_alltrace, detailAccur_alltrace] = Calc_metric(est_ser, unkonwSymbolp,limit_length)
-    ave_preci = 0;ave_recall = 0
+    ave_tppreci = 0; ave_tnpreci = 0; avetn_recall = 0
     for i in range(len(accur_alltrace)):
-        print "%d:[preci]%s, [tp_rec]:%s,[tn_rec]%s, [tp_pre]%s, [tn_pre]%s" %\
-              (i, str(accur_alltrace[i][0]), accur_alltrace[i][1],
-               str(accur_alltrace[i][2]), str(accur_alltrace[i][3]), str(accur_alltrace[i][4])),
+        # print "%d:[preci]%s, [tp_rec]:%s,[tn_rec]%s, [tp_pre]%s, [tn_pre]%s" %\
+        #       (i, str(accur_alltrace[i][0]), accur_alltrace[i][1],
+        #        str(accur_alltrace[i][2]), str(accur_alltrace[i][3]), str(accur_alltrace[i][4])),
 
-        print "[fp]:%s, [fn]:%s, [tp]:%s, [tn]:%s" % (str(detailAccur_alltrace[i][0]),str(detailAccur_alltrace[i][1]),str(detailAccur_alltrace[i][2]),str(detailAccur_alltrace[i][3]) )
-        ave_preci += accur_alltrace[i][0]
-        ave_recall += accur_alltrace[i][1]
-    print '[metrics]:%s_%s, [ave_precision]:%s, [ave_recall]:%s' % ( metric_command, str(argvList[0]), str(ave_preci/len(accur_alltrace)), str(ave_recall/len(accur_alltrace)))
-pass
+        # print "[fp]:%s, [fn]:%s, [tp]:%s, [tn]:%s" % (str(detailAccur_alltrace[i][0]),str(detailAccur_alltrace[i][1]),str(detailAccur_alltrace[i][2]),str(detailAccur_alltrace[i][3]) )
+        ave_tppreci += accur_alltrace[i][3]
+        ave_tnpreci += accur_alltrace[i][4]
+        avetn_recall += accur_alltrace[i][2]
+
+    print '[metrics]:%s_%s{%s-%s}, [ave_tpprecision]:%s,  [ave_tnpreci]%s,  [ave_tnrecall]:%s' % \
+          ( limit_length[0], limit_length[1],
+              metric_command, str(argvList[0]),
+            str(ave_tppreci/len(accur_alltrace)),   str(ave_tnpreci/ len(accur_alltrace)),  str(avetn_recall/len(accur_alltrace)))
+
+
+if __name__ == '__main__':
+
+    metric_command_readytest = ["SINR", "RSSI"]
+    argvList = [0,1,2]
+    algortihmtest(metric_command_readytest[0], [argvList[1]])
+    # for mc in metric_command_readytest:
+    #     for al in argvList:
+    #         algortihmtest(mc, [al])
+
+    pass
 
 
 #
