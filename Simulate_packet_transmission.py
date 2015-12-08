@@ -76,16 +76,32 @@ def Calc_metric(est_ser, unkonwSymbolp,limit_length):
         detailAccur_packet.append(tn)
         detailAccur_alltrace.append(detailAccur_packet)
 
+        if tp + fp != 0:
+            tp_precision = (tp) * 1.0/ (tp+fp)
+        else:
+            tp_precision = 0
+        if tn + fn != 0 :
+            tn_precision = (fn) * 1.0 /(tn+fn)
+        else:
+            tn_precision = 0
+
         if tp+fp+tn+fn != 0:
             precision = (tn+tp)*1.0 / (tp+fp+tn+fn)# accuracy
         else:
             precision = 0
         if tn+fp != 0:
-            recall = tn*1.0 / (tn+fp)    # whole
+            tn_recall = tn*1.0 / (tn+fp)    # whole
         else:
-            recall = 0
+            tn_recall = 0
+        if tp+ fn != 0:
+            tp_recall = (tp)*1.0/ (tp+fn)
+        else:
+            tp_recall = 0
         accru_packet.append(precision)
-        accru_packet.append(recall)
+        accru_packet.append(tp_recall)
+        accru_packet.append(tn_recall)
+        accru_packet.append(tp_precision)
+        accru_packet.append(tn_precision)
         accur_alltrace.append(accru_packet)
     return [accur_alltrace, detailAccur_alltrace]
 
@@ -135,8 +151,8 @@ def print_split_trace(split_data, split_rssi,  pilot_step, limit_length):
 if __name__ == '__main__':
     limit_length = [0,12]
 
-    metric_command = "RSSI"
-    argvList = [0]
+    metric_command = "SINR"
+    argvList = [1]
     [split_data, split_rssi, pilot_step] = pds.simulated_tracebase(metric_command, argvList)
     [pilot_data_alltrace, pilot_ser_alltrace] = pds.simulated_pilot_generate(split_data, split_rssi, pilot_step, metric_command, argvList)
     other_data_alltrace = pds.simulated_unkonw_symbol(split_data, split_rssi, pilot_step, metric_command, argvList)
@@ -170,7 +186,10 @@ if __name__ == '__main__':
     [accur_alltrace, detailAccur_alltrace] = Calc_metric(est_ser, unkonwSymbolp,limit_length)
     ave_preci = 0;ave_recall = 0
     for i in range(len(accur_alltrace)):
-        print "%d:[preci]%s, [recall]:%s" % (i, str(accur_alltrace[i][0]), accur_alltrace[i][1]),
+        print "%d:[preci]%s, [tp_rec]:%s,[tn_rec]%s, [tp_pre]%s, [tn_pre]%s" %\
+              (i, str(accur_alltrace[i][0]), accur_alltrace[i][1],
+               str(accur_alltrace[i][2]), str(accur_alltrace[i][3]), str(accur_alltrace[i][4])),
+
         print "[fp]:%s, [fn]:%s, [tp]:%s, [tn]:%s" % (str(detailAccur_alltrace[i][0]),str(detailAccur_alltrace[i][1]),str(detailAccur_alltrace[i][2]),str(detailAccur_alltrace[i][3]) )
         ave_preci += accur_alltrace[i][0]
         ave_recall += accur_alltrace[i][1]
