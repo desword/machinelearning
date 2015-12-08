@@ -19,24 +19,30 @@ import rawDataExactor as rde
 #     pass
 
 def estimate_ser(pilot_data_alltrace, pilot_ser_alltrace, other_data_alltrace, limit_length, theta_num):
-    theta = [0.4 for i in range(theta_num)]
+    theta = [2 for i in range(theta_num)]
     est_ser_all = []
     # for i in range(len(pilot_data_alltrace)):
+
+
     for i in range(limit_length[0], limit_length[1]):
         # theta = [1 for j in range(len(pilot_data_alltrace[0][0])+ 1)]
 
         # print '%s', pilot_data_alltrace[i]
         theta = ot.onlineLearningMain(pilot_data_alltrace[i], pilot_ser_alltrace[i], theta)
         est_ser_packet = []
+        nor_other_data_packet = ot.normalize_pilotdata(other_data_alltrace[i])
         # estimate every symbol error rate except the pilot
-        for j in range(len(other_data_alltrace[i])):
+        for j in range(len(nor_other_data_packet)):
             up_fun = theta[0]
             for k in range(1, len(theta)):
-                up_fun += (theta[k] * int(other_data_alltrace[i][j][k-1]))
+                up_fun += (theta[k] * nor_other_data_packet[j][k-1])
+                # print 'theta[%s]%s' % (k , theta[k] * int(nor_other_data_packet[j][k-1])),
             # dis_fun = 1 / (1 + math.e**(up_fun))
             dis_fun = math.e**(up_fun) / (1 + math.e**(up_fun))
             est_ser_packet.append(dis_fun)
-            # print '[%s-%s]' %(i,j), other_data_alltrace[i][j]
+            # print '[%s-%s]' %(i,j), nor_other_data_packet[j], \
+            #     '[%s/(1+%s)] = %s' % (math.e**(up_fun), math.e**(up_fun), dis_fun)
+
         # print "[%d]:" % (i), est_ser_packet, '\n'
         est_ser_all.append(est_ser_packet)
     return est_ser_all
@@ -70,16 +76,32 @@ def Calc_metric(est_ser, unkonwSymbolp,limit_length):
         detailAccur_packet.append(tn)
         detailAccur_alltrace.append(detailAccur_packet)
 
+        if tp + fp != 0:
+            tp_precision = (tp) * 1.0/ (tp+fp)
+        else:
+            tp_precision = 0
+        if tn + fn != 0 :
+            tn_precision = (fn) * 1.0 /(tn+fn)
+        else:
+            tn_precision = 0
+
         if tp+fp+tn+fn != 0:
             precision = (tn+tp)*1.0 / (tp+fp+tn+fn)# accuracy
         else:
             precision = 0
         if tn+fp != 0:
-            recall = tn*1.0 / (tn+fp)    # whole
+            tn_recall = tn*1.0 / (tn+fp)    # whole
         else:
-            recall = 0
+            tn_recall = 0
+        if tp+ fn != 0:
+            tp_recall = (tp)*1.0/ (tp+fn)
+        else:
+            tp_recall = 0
         accru_packet.append(precision)
-        accru_packet.append(recall)
+        accru_packet.append(tp_recall)
+        accru_packet.append(tn_recall)
+        accru_packet.append(tp_precision)
+        accru_packet.append(tn_precision)
         accur_alltrace.append(accru_packet)
     return [accur_alltrace, detailAccur_alltrace]
 
@@ -164,7 +186,10 @@ if __name__ == '__main__':
     [accur_alltrace, detailAccur_alltrace] = Calc_metric(est_ser, unkonwSymbolp,limit_length)
     ave_preci = 0;ave_recall = 0
     for i in range(len(accur_alltrace)):
-        print "%d:[preci]%s, [recall]:%s" % (i, str(accur_alltrace[i][0]), accur_alltrace[i][1]),
+        print "%d:[preci]%s, [tp_rec]:%s,[tn_rec]%s, [tp_pre]%s, [tn_pre]%s" %\
+              (i, str(accur_alltrace[i][0]), accur_alltrace[i][1],
+               str(accur_alltrace[i][2]), str(accur_alltrace[i][3]), str(accur_alltrace[i][4])),
+
         print "[fp]:%s, [fn]:%s, [tp]:%s, [tn]:%s" % (str(detailAccur_alltrace[i][0]),str(detailAccur_alltrace[i][1]),str(detailAccur_alltrace[i][2]),str(detailAccur_alltrace[i][3]) )
         ave_preci += accur_alltrace[i][0]
         ave_recall += accur_alltrace[i][1]

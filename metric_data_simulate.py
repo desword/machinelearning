@@ -34,21 +34,8 @@ def SINR_symbol_metric( rssi_packet, index_symbol, neighbor_level):
 
     # calculate the extract fraction rssi data
     symbol_SINR = []
-    start_poi = 0
+    [index_beg, index_end, symbol_SINR, start_poi] = filldata_for_learning(rssi_packet, index_symbol, neighbor_level, symbol_SINR)
 
-    max_left_rssinum = neighbor_level
-    max_right_rssinum = neighbor_level
-    index_beg = index_symbol - max_left_rssinum
-    if index_beg < 0:
-        for i in range(abs(index_beg)):
-            symbol_SINR.append(0)
-        index_beg = 0
-        start_poi = len(symbol_SINR)
-    index_end = index_symbol + max_right_rssinum + 1
-    if index_end > len(rssi_packet):
-        for i in range(index_end - len(rssi_packet)):
-            symbol_SINR.append(0)
-        index_end = len(rssi_packet)
 
     # calculate the corresponding training data of SINR for current symbol
     for i in range(index_beg, index_end):
@@ -62,7 +49,6 @@ def SINR_symbol_metric( rssi_packet, index_symbol, neighbor_level):
         # symbol_SINR.append( signal_packet_mw/(isymbolInterference_mw + noise_mw) )
         # save the dbm value as the SINR, which is more accurate
 
-        scale = 10**15
 
         symbol_sinr_mwrate = signal_packet_mw/(isymbolInterference_mw + noise_mw)
         symbol_sinr_dbmrate = mw_to_dbm(symbol_sinr_mwrate)
@@ -108,6 +94,22 @@ def SINR_symbol_metric( rssi_packet, index_symbol, neighbor_level):
                      min(rssi_packet), RSSI_raw2dbm(min(rssi_packet)))
     return symbol_SINR
 
+def filldata_for_learning(packet_metrics, index_symbol, neighbor_level, metrics_list):
+    start_poi = 0
+    max_left_rssinum = neighbor_level
+    max_right_rssinum = neighbor_level
+    index_beg = index_symbol - max_left_rssinum
+    if index_beg < 0:
+        for i in range(abs(index_beg)):
+            metrics_list.append(0)
+        index_beg = 0
+        start_poi = len(metrics_list)
+    index_end = index_symbol + max_right_rssinum + 1
+    if index_end > len(packet_metrics):
+        for i in range(index_end - len(packet_metrics)):
+            metrics_list.append(0)
+        index_end = len(packet_metrics)
+    return [index_beg, index_end, metrics_list, start_poi]
 
 def calc_dif_RSSI(rssi_packet, rssi_selectfraction):
     # baseRSSI = int(max(rssi_packet,key=rssi_packet.count))
@@ -120,13 +122,12 @@ def calc_dif_RSSI(rssi_packet, rssi_selectfraction):
 # using multiple rssi value surrounded with data as input to training the model
 # the rssi value still is the difference between the majority.
 def RSSI_symbol_metrics(rssi_packet, index_data, neighbor_level):
-    max_left_rssinum = neighbor_level
-    max_right_rssinum = neighbor_level
-    index_beg = index_data - max_left_rssinum
-    if index_beg < 0:
-        index_beg = 0
-    index_end = index_data + max_right_rssinum + 1
-    if index_end > len(rssi_packet):
-        index_end = len(rssi_packet)
-    return calc_dif_RSSI(rssi_packet, rssi_packet[index_beg:index_end])
+
+    symbol_RSSI = []
+    [index_beg, index_end, symbol_RSSI, start_poi] = filldata_for_learning(rssi_packet, index_data, neighbor_level, symbol_RSSI)
+    rssi_fraction = calc_dif_RSSI(rssi_packet, rssi_packet[index_beg: index_end])
+    for eachrssi in rssi_fraction:
+        symbol_RSSI.insert(start_poi, eachrssi)
+
+    return symbol_RSSI
     pass

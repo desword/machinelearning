@@ -23,7 +23,7 @@ def calc_loss(pilot_data, pilot_ser, theta):
 def normalize_pilotdata(pilot_data):
     for i in range(len(pilot_data)):
         for j in range(len(pilot_data[i])):
-            pilot_data[i][j] = int(pilot_data[i][j]) * 1.0 / 80
+            pilot_data[i][j] = int(pilot_data[i][j]) * 1.0 / 255
     return pilot_data
     pass
 
