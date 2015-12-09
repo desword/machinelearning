@@ -117,7 +117,7 @@ def Calc_metric(est_ser, unkonwSymbolp,limit_length):
         accur_alltrace.append(accru_packet)
     return [accur_alltrace, detailAccur_alltrace]
 
-def print_detail_result(est_ser, UnkonwSymbolPayload,other_data_alltrace, limit_length,metric_command ):
+def print_detail_result(est_ser, UnkonwSymbolPayload,other_data_alltrace, limit_length,metric_command, argvList ):
     result = []
     for i in range(len(est_ser)):
         for j in range(len(est_ser[i])):
@@ -130,7 +130,7 @@ def print_detail_result(est_ser, UnkonwSymbolPayload,other_data_alltrace, limit_
                           (i,j, str(est_ser[i][j]) ,
                            str(UnkonwSymbolPayload[i+limit_length[0]][j]),
                            metric_command,metric_data))
-    f =open('figure/result_%d_%d_%s.txt' % (limit_length[0],limit_length[1], metric_command),'w')
+    f =open('figure/result_%d_%d_[%s-%s].txt' % (limit_length[0],limit_length[1], metric_command, argvList[0]),'w')
     f.writelines(result)
     f.close()
     pass
@@ -215,8 +215,12 @@ def algortihmtest(metric_c, argvL):
 if __name__ == '__main__':
 
     metric_command_readytest = ["SINR", "RSSI"]
-    argvList = [0,1,2]
-    algortihmtest(metric_command_readytest[0], [argvList[1]])
+    argvList = [0,1,2,3,4,5,6,7,8,9,10,11,12]
+    # algortihmtest(metric_command_readytest[0], [argvList[3]])
+
+    for al in argvList:
+        algortihmtest(metric_command_readytest[1], [al])
+
     # for mc in metric_command_readytest:
     #     for al in argvList:
     #         algortihmtest(mc, [al])

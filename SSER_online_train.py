@@ -21,10 +21,11 @@ def calc_loss(pilot_data, pilot_ser, theta):
     pass
 
 # scale down the pilot data to [0,1]
+# eliminate the the first 1.0 number
 def normalize_pilotdata(pilot_data):
     for i in range(len(pilot_data)):
-        for j in range(len(pilot_data[i])):
-            pilot_data[i][j] = int(pilot_data[i][j]) * 1.0 / 255
+        for j in range(1, len(pilot_data[i])):
+            pilot_data[i][j] = pilot_data[i][j] * 1.0 / 20
     return pilot_data
     pass
 
@@ -83,33 +84,34 @@ def online_train(pilot_data, pilot_ser, theta):
         error_sum = destfunc(theta, pilot_data[i], pilot_ser[i])
 
         ''' papers way'''
-        # for ti in range(len(theta)):
-        #     deta_theta_pre = deta_theta[ti]
-        #     deta_theta[ti] = error_sum * pilot_data[i][ti]
-        #
-        #
-        #     deta_theta_avesquare[ti] = (2 * deta_theta[ti] * deta_theta[ti] + i * deta_theta_avesquare[ti])/(i+2)
-        #     # deta_theta_avesquare[ti] = 0.8 * deta_theta_avesquare[ti] + 0.2 * (deta_theta[ti] ** 2)
-        #     if deta_theta_avesquare[ti] != 0:
-        #         learn_rate[ti] = learn_rate[ti] * max( 0.5 , 1 + 0.8 *
-        #                 (deta_theta_pre * deta_theta[ti] / deta_theta_avesquare[ti]))
-        #
-        #     ''''simple way to update the learning rate'''
-        #     # learn_rate[thetaIndex] =
-        #
-        #
-        #     theta[ti] = theta[ti] + learn_rate[ti] * deta_theta[ti]
+        for ti in range(len(theta)):
+            deta_theta_pre = deta_theta[ti]
+            deta_theta[ti] = error_sum * pilot_data[i][ti]
+
+
+            deta_theta_avesquare[ti] = (2 * deta_theta[ti] * deta_theta[ti] + i * deta_theta_avesquare[ti])/(i+2)
+            '''sensys12 - update the expon moving average'''
+            # deta_theta_avesquare[ti] = 0.8 * deta_theta_avesquare[ti] + 0.2 * (deta_theta[ti] ** 2)
+            if deta_theta_avesquare[ti] != 0:
+                learn_rate[ti] = learn_rate[ti] * max( 0.5 , 1 + 0.8 *
+                        (deta_theta_pre * deta_theta[ti] / deta_theta_avesquare[ti]))
+
+            ''''simple way to update the learning rate'''
+            # learn_rate[thetaIndex] =
+
+
+            theta[ti] = theta[ti] + learn_rate[ti] * deta_theta[ti]
 
             # print theta
 
 
-        # upda the learn rate
-        [pre_err_EMA , learn_rate]= adaplearnrate(learn_rate, pre_err_EMA, error_sum, pre_error_sum ,i,pilot_data[i], pilot_data[i-1])
-        pre_error_sum = error_sum
-        # update the theta with the error sum and learn rate
-        # theta[0] += (learn_rate[0] * error_sum)
-        for j in range(len(theta)):
-            theta[j] += (learn_rate[j] * error_sum * pilot_data[i][j])
+        # # upda the learn rate
+        # [pre_err_EMA , learn_rate]= adaplearnrate(learn_rate, pre_err_EMA, error_sum, pre_error_sum ,i,pilot_data[i], pilot_data[i-1])
+        # pre_error_sum = error_sum
+        # # update the theta with the error sum and learn rate
+        # # theta[0] += (learn_rate[0] * error_sum)
+        # for j in range(len(theta)):
+        #     theta[j] += (learn_rate[j] * error_sum * pilot_data[i][j])
 
         # print '[%s]' % (pIndex), pilot_data[i]
         # print "theta[0]:%s, theta[1]:%s\n" % (str(theta[0]) ,str(theta[1]))
